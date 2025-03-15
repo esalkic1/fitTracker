@@ -1,0 +1,16 @@
+server:
+  port: 9030
+
+spring:
+  application:
+    name: workout-service
+  jpa:
+    database: postgresql
+    show-sql: false
+    hibernate:
+      ddl-auto: update
+  datasource:
+    url: jdbc:postgresql://localhost:5432/nwt_workout
+    username: postgres
+    password:
+    driver-class-name: org.postgresql.Driver

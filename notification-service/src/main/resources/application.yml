@@ -1,0 +1,16 @@
+server:
+  port: 9040
+
+spring:
+  application:
+    name: notification-service
+  jpa:
+    database: postgresql
+    show-sql: false
+    hibernate:
+      ddl-auto: update
+  datasource:
+    url: jdbc:postgresql://localhost:5432/nwt_notification
+    username: postgres
+    password:
+    driver-class-name: org.postgresql.Driver
