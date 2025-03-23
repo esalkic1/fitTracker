@@ -14,3 +14,10 @@ spring:
     username: postgres
     password:
     driver-class-name: org.postgresql.Driver
+
+jwt:
+  header-title: Authorization
+  token-prefix: "Bearer "
+  secret-key: ${JWT_SECRET_KEY}
+  authorities-key: USER_AUTHORITIES
+  token-validity-time: PT30M

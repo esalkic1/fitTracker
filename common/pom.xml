@@ -11,6 +11,8 @@
 
     <modules>
         <module>http_logging</module>
+        <module>error-logging</module>
+        <module>spring-mvc-configuration</module>
     </modules>
 
     <properties>

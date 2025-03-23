@@ -8,7 +8,7 @@ To start the app you need
 First, through any DB software (or terminal) create 4 postgres databases, one for each microservice.
 They should be named `nwt_auth`, `nwt_notification`, `nwt_nutrition` and `nwt_workout`.
 
-For each microservice, inside its package run `mvn clean install`. 
+For each microservice, inside its package run `mvn clean install` (`common` has to be compiled first).
 
 We can now start the applications.
 
