@@ -15,7 +15,6 @@ public class CorsAutoConfiguration {
 	@Bean
 	@Primary
 	public CorsConfigurationSource corsConfigurationSource() {
-		System.out.println("CONFIGURING CORS");
 		CorsConfiguration corsConfiguration = new org.springframework.web.cors.CorsConfiguration();
 		corsConfiguration.setAllowedOrigins(List.of("*"));
 		corsConfiguration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "HEAD", "OPTIONS"));
