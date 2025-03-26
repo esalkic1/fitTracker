@@ -21,7 +21,7 @@ public class WorkoutController {
 	}
 
 	@GetMapping("{id}")
-	Workout getWorkout(@PathVariable final UUID id) {
+	Workout getWorkout(@PathVariable final String id) {
 		return workoutService.getWorkoutById(id);
 	}
 

@@ -1,9 +1,9 @@
 package ba.unsa.etf.nwt.workout_service.repositories;
 
-import ba.unsa.etf.nwt.workout_service.domain.Workout;
+import ba.unsa.etf.nwt.workout_service.domain.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.UUID;
 
-public interface WorkoutRepository extends JpaRepository<Workout, Long> {
+public interface UserRepository extends JpaRepository<User, Long> {
 }

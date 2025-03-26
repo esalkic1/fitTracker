@@ -19,8 +19,8 @@ public class WorkoutService {
 		return workoutRepository.save(workout);
 	}
 
-	public Workout getWorkoutById(final UUID id) {
-		return workoutRepository.findById(id)
+	public Workout getWorkoutById(final String id) {
+		return workoutRepository.findById(Long.valueOf(id))
 				.orElseThrow(EntityNotFoundException::new);
 	}
 }
