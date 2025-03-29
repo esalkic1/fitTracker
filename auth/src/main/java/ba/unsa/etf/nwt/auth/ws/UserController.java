@@ -9,8 +9,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.UUID;
-
 @RestController
 @RequestMapping("api/v1/user")
 public class UserController {
@@ -21,9 +19,9 @@ public class UserController {
 	}
 
 	@GetMapping("{id}")
-	public ResponseEntity<?> getUser(@PathVariable final UUID id) {
+	public ResponseEntity<?> getUser(@PathVariable final String id) {
 		try {
-			return ResponseEntity.ok(userService.get(id));
+			return ResponseEntity.ok(userService.get(Long.parseLong(id)));
 		} catch (UserServiceException e) {
 			return ResponseEntity.badRequest().body(
 					ErrorResponse.from(e.getErrorType(), e.getMessage())

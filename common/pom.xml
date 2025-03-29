@@ -13,6 +13,7 @@
         <module>http_logging</module>
         <module>error-logging</module>
         <module>spring-mvc-configuration</module>
+        <module>jpa</module>
     </modules>
 
     <properties>
