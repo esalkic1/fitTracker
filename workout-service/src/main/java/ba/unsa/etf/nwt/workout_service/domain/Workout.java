@@ -1,13 +1,14 @@
 package ba.unsa.etf.nwt.workout_service.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
 @Entity
-@Table(name = "workout")
 public class Workout {
 
 	@Id
@@ -17,10 +18,11 @@ public class Workout {
 	@Column(unique = true, nullable = false, updatable = false)
 	private UUID uuid;
 
-	private LocalDateTime date;
+	private Instant date;
 
 	@ManyToOne
 	@JoinColumn(name = "user_id", nullable = false)
+	@JsonIgnore
 	private User user;
 
 	@OneToMany(mappedBy = "workout", cascade = CascadeType.ALL)
@@ -30,7 +32,7 @@ public class Workout {
 		this.uuid = UUID.randomUUID();
 	}
 
-	public Workout(String name, LocalDateTime date, User user, List<Exercise> exercises) {
+	public Workout(String name, Instant date, User user, List<Exercise> exercises) {
 		this.uuid = UUID.randomUUID();
 		this.date = date;
 		this.user = user;
@@ -49,11 +51,11 @@ public class Workout {
 		this.uuid = uuid;
 	}
 
-	public LocalDateTime getDate() {
+	public Instant getDate() {
 		return date;
 	}
 
-	public void setDate(LocalDateTime date) {
+	public void setDate(Instant date) {
 		this.date = date;
 	}
 

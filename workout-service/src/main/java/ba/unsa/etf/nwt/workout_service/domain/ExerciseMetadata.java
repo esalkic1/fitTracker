@@ -10,22 +10,27 @@ public class ExerciseMetadata {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
-    @Column(unique = true, nullable = false)
+    @Column(unique = true, nullable = false, updatable = false)
     private UUID uuid;
 
-    private String muscleGroup;
-    private String equipment;
-    private String difficultyLevel;
+    @OneToOne
+    @JoinColumn(name = "exercise_id", nullable = false)
+    private Exercise exercise;
+
+    private String videoUrl;
+    private String imageUrl;
+    private String additionalNotes;
 
     public ExerciseMetadata() {
         this.uuid = UUID.randomUUID();
     }
 
-    public ExerciseMetadata(String muscleGroup, String equipment, String difficultyLevel) {
+    public ExerciseMetadata(Exercise exercise, String videoUrl, String imageUrl, String additionalNotes) {
         this.uuid = UUID.randomUUID();
-        this.muscleGroup = muscleGroup;
-        this.equipment = equipment;
-        this.difficultyLevel = difficultyLevel;
+        this.exercise = exercise;
+        this.videoUrl = videoUrl;
+        this.imageUrl = imageUrl;
+        this.additionalNotes = additionalNotes;
     }
 
     public long getId() {
@@ -44,28 +49,36 @@ public class ExerciseMetadata {
         this.uuid = uuid;
     }
 
-    public String getMuscleGroup() {
-        return muscleGroup;
+    public Exercise getExercise() {
+        return exercise;
     }
 
-    public void setMuscleGroup(String muscleGroup) {
-        this.muscleGroup = muscleGroup;
+    public void setExercise(Exercise exercise) {
+        this.exercise = exercise;
     }
 
-    public String getEquipment() {
-        return equipment;
+    public String getVideoUrl() {
+        return videoUrl;
     }
 
-    public void setEquipment(String equipment) {
-        this.equipment = equipment;
+    public void setVideoUrl(String videoUrl) {
+        this.videoUrl = videoUrl;
     }
 
-    public String getDifficultyLevel() {
-        return difficultyLevel;
+    public String getImageUrl() {
+        return imageUrl;
     }
 
-    public void setDifficultyLevel(String difficultyLevel) {
-        this.difficultyLevel = difficultyLevel;
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
+    }
+
+    public String getAdditionalNotes() {
+        return additionalNotes;
+    }
+
+    public void setAdditionalNotes(String additionalNotes) {
+        this.additionalNotes = additionalNotes;
     }
 }
 

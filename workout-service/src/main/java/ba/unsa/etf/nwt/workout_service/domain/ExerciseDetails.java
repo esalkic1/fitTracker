@@ -1,49 +1,42 @@
 package ba.unsa.etf.nwt.workout_service.domain;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
-import java.util.List;
 import java.util.UUID;
 
 @Entity
-public class WorkoutTemplate {
-
+public class ExerciseDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private long id;
 
     @Column(unique = true, nullable = false, updatable = false)
     private UUID uuid;
 
     private String name;
     private String description;
+    private String muscleGroup;
+    private String equipment;
+    private String difficultyLevel;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
-    @JsonIgnore
-    private User user;
-
-    @OneToMany(mappedBy = "workoutTemplate", cascade = CascadeType.ALL)
-    private List<ExerciseTemplate> exerciseTemplates;
-
-    public WorkoutTemplate() {
+    public ExerciseDetails() {
         this.uuid = UUID.randomUUID();
     }
 
-    public WorkoutTemplate(String name, String description, User user, List<ExerciseTemplate> exerciseTemplates) {
+    public ExerciseDetails(String name, String description, String muscleGroup, String equipment, String difficultyLevel) {
         this.uuid = UUID.randomUUID();
         this.name = name;
         this.description = description;
-        this.user = user;
-        this.exerciseTemplates = exerciseTemplates;
+        this.muscleGroup = muscleGroup;
+        this.equipment = equipment;
+        this.difficultyLevel = difficultyLevel;
     }
 
-    public Long getId() {
+    public long getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(long id) {
         this.id = id;
     }
 
@@ -71,19 +64,27 @@ public class WorkoutTemplate {
         this.description = description;
     }
 
-    public User getUser() {
-        return user;
+    public String getMuscleGroup() {
+        return muscleGroup;
     }
 
-    public void setUser(User user) {
-        this.user = user;
+    public void setMuscleGroup(String muscleGroup) {
+        this.muscleGroup = muscleGroup;
     }
 
-    public List<ExerciseTemplate> getExerciseTemplates() {
-        return exerciseTemplates;
+    public String getEquipment() {
+        return equipment;
     }
 
-    public void setExerciseTemplates(List<ExerciseTemplate> exerciseTemplates) {
-        this.exerciseTemplates = exerciseTemplates;
+    public void setEquipment(String equipment) {
+        this.equipment = equipment;
+    }
+
+    public String getDifficultyLevel() {
+        return difficultyLevel;
+    }
+
+    public void setDifficultyLevel(String difficultyLevel) {
+        this.difficultyLevel = difficultyLevel;
     }
 }

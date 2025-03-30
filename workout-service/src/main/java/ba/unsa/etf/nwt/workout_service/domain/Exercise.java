@@ -1,5 +1,6 @@
 package ba.unsa.etf.nwt.workout_service.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 import java.util.UUID;
@@ -10,34 +11,33 @@ public class Exercise {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
-    @Column(unique = true, nullable = false)
+    @Column(unique = true, nullable = false, updatable = false)
     private UUID uuid;
 
-    private String name;
     private double weight;
     private int reps;
     private int sets;
 
+    @OneToOne
+    @JoinColumn(name = "exercise_details_id", nullable = false)
+    private ExerciseDetails exerciseDetails;
+
     @ManyToOne
     @JoinColumn(name = "workout_id", nullable = false)
+    @JsonIgnore
     private Workout workout;
-
-    @OneToOne
-    @JoinColumn(name = "exercise_metadata_id", nullable = false)
-    private ExerciseMetadata metadata;
 
     public Exercise() {
         this.uuid = UUID.randomUUID();
     }
 
-    public Exercise(String name, double weight, int reps, int sets, Workout workout, ExerciseMetadata metadata) {
+    public Exercise(double weight, int reps, int sets, Workout workout, ExerciseDetails exerciseDetails) {
         this.uuid = UUID.randomUUID();
-        this.name = name;
         this.weight = weight;
         this.reps = reps;
         this.sets = sets;
         this.workout = workout;
-        this.metadata = metadata;
+        this.exerciseDetails = exerciseDetails;
     }
 
     public long getId() {
@@ -56,12 +56,12 @@ public class Exercise {
         this.workout = workout;
     }
 
-    public ExerciseMetadata getMetadata() {
-        return metadata;
+    public ExerciseDetails getExerciseDetails() {
+        return exerciseDetails;
     }
 
-    public void setMetadata(ExerciseMetadata metadata) {
-        this.metadata = metadata;
+    public void setExerciseDetails(ExerciseDetails exerciseDetails) {
+        this.exerciseDetails = exerciseDetails;
     }
 
     public UUID getUuid() {
@@ -70,14 +70,6 @@ public class Exercise {
 
     public void setUuid(UUID uuid) {
         this.uuid = uuid;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
     }
 
     public int getSets() {
@@ -103,6 +95,7 @@ public class Exercise {
     public void setWeight(double weight) {
         this.weight = weight;
     }
+
 }
 
 
