@@ -21,7 +21,7 @@ public class UserService implements UserDetailsService {
 		this.userRepository = userRepository;
 	}
 
-	public User get(final UUID id) throws UserServiceException {
+	public User get(final Long id) throws UserServiceException {
 		return userRepository.findById(id)
 				.orElseThrow(() ->
 						new UserServiceException("Could not find user with id: " + id, ErrorType.ENTITY_NOT_FOUND)

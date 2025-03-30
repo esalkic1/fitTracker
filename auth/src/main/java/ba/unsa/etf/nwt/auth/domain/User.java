@@ -1,5 +1,7 @@
 package ba.unsa.etf.nwt.auth.domain;
 
+import ba.unsa.etf.nwt.common.jpa.uuid_generator.AutoGenerateUUID;
+import ba.unsa.etf.nwt.common.jpa.uuid_generator.UUIDGenerator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
@@ -8,11 +10,16 @@ import java.util.UUID;
 
 @Entity
 @Table(name = "user_account")
+@EntityListeners(UUIDGenerator.class)
 public class User {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
-	private UUID id;
+	private Long id;
+
+	@AutoGenerateUUID
+	@Column(unique = true, nullable = false)
+	private UUID handle;
 
 	@NotNull(message = "User must have an email.")
 	@Column(unique = true, nullable = false)
@@ -35,12 +42,20 @@ public class User {
 		this.password = password;
 	}
 
-	public UUID getId() {
+	public Long getId() {
 		return id;
 	}
 
-	public void setId(UUID id) {
+	public void setId(Long id) {
 		this.id = id;
+	}
+
+	public UUID getHandle() {
+		return handle;
+	}
+
+	public void setHandle(UUID handle) {
+		this.handle = handle;
 	}
 
 	public String getEmail() {
