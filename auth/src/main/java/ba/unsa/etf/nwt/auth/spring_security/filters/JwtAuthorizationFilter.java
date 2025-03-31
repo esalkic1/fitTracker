@@ -17,6 +17,10 @@ import java.io.IOException;
 import java.util.Set;
 
 public class JwtAuthorizationFilter extends OncePerRequestFilter {
+	private static final Set<String> ALLOWED_PATHS = Set.of(
+			"/api/v1/auth"
+	);
+
 	private final JwtService jwtService;
 	private final String headerTitle;
 	private final String tokenPrefix;
@@ -60,5 +64,10 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
 		} catch (final IOException | ServletException | JwtException e) {
 			response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
 		}
+	}
+
+	@Override
+	protected boolean shouldNotFilter(final HttpServletRequest request) {
+		return ALLOWED_PATHS.stream().anyMatch(request.getRequestURI()::startsWith);
 	}
 }

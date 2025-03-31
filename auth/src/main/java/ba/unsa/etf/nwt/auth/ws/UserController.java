@@ -19,13 +19,7 @@ public class UserController {
 	}
 
 	@GetMapping("{id}")
-	public ResponseEntity<?> getUser(@PathVariable final String id) {
-		try {
-			return ResponseEntity.ok(userService.get(Long.parseLong(id)));
-		} catch (UserServiceException e) {
-			return ResponseEntity.badRequest().body(
-					ErrorResponse.from(e.getErrorType(), e.getMessage())
-			);
-		}
+	public ResponseEntity<?> getUser(@PathVariable final String id) throws UserServiceException {
+		return ResponseEntity.ok(userService.get(Long.parseLong(id)));
 	}
 }
