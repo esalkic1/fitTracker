@@ -61,8 +61,8 @@ public class DataSeeder implements CommandLineRunner {
         template2.setExerciseTemplates(List.of(templateExercise3));
         workoutTemplateRepository.saveAll(Arrays.asList(template1, template2));
 
-        Workout workout1 = new Workout("Workout 1", Instant.now(), user1, null);
-        Workout workout2 = new Workout("Workout 2", Instant.now(), user2, null);
+        Workout workout1 = new Workout(Instant.now(), user1, null);
+        Workout workout2 = new Workout(Instant.now(), user2, null);
         workoutRepository.saveAll(Arrays.asList(workout1, workout2));
 
         Exercise exercise1 = new Exercise(50, 10, 3, workout1, benchPressDetails);

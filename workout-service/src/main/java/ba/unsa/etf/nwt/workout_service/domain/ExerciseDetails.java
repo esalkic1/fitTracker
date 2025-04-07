@@ -1,15 +1,19 @@
 package ba.unsa.etf.nwt.workout_service.domain;
 
+import ba.unsa.etf.nwt.common.jpa.uuid_generator.AutoGenerateUUID;
+import ba.unsa.etf.nwt.common.jpa.uuid_generator.UUIDGenerator;
 import jakarta.persistence.*;
 
 import java.util.UUID;
 
 @Entity
+@EntityListeners(UUIDGenerator.class)
 public class ExerciseDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
+    @AutoGenerateUUID
     @Column(unique = true, nullable = false, updatable = false)
     private UUID uuid;
 
@@ -19,12 +23,9 @@ public class ExerciseDetails {
     private String equipment;
     private String difficultyLevel;
 
-    public ExerciseDetails() {
-        this.uuid = UUID.randomUUID();
-    }
+    public ExerciseDetails() {}
 
     public ExerciseDetails(String name, String description, String muscleGroup, String equipment, String difficultyLevel) {
-        this.uuid = UUID.randomUUID();
         this.name = name;
         this.description = description;
         this.muscleGroup = muscleGroup;

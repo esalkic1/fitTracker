@@ -1,16 +1,20 @@
 package ba.unsa.etf.nwt.workout_service.domain;
 
+import ba.unsa.etf.nwt.common.jpa.uuid_generator.AutoGenerateUUID;
+import ba.unsa.etf.nwt.common.jpa.uuid_generator.UUIDGenerator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 import java.util.UUID;
 
 @Entity
+@EntityListeners(UUIDGenerator.class)
 public class ExerciseTemplate {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
+    @AutoGenerateUUID
     @Column(unique = true, nullable = false, updatable = false)
     private UUID uuid;
 
@@ -23,12 +27,9 @@ public class ExerciseTemplate {
     @JsonIgnore
     private WorkoutTemplate workoutTemplate;
 
-    public ExerciseTemplate() {
-        this.uuid = UUID.randomUUID();
-    }
+    public ExerciseTemplate() {}
 
     public ExerciseTemplate(ExerciseDetails exerciseDetails, WorkoutTemplate workoutTemplate) {
-        this.uuid = UUID.randomUUID();
         this.exerciseDetails = exerciseDetails;
         this.workoutTemplate = workoutTemplate;
     }

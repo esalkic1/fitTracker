@@ -1,5 +1,7 @@
 package ba.unsa.etf.nwt.workout_service.domain;
 
+import ba.unsa.etf.nwt.common.jpa.uuid_generator.AutoGenerateUUID;
+import ba.unsa.etf.nwt.common.jpa.uuid_generator.UUIDGenerator;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
@@ -9,12 +11,14 @@ import java.util.List;
 import java.util.UUID;
 
 @Entity
+@EntityListeners(UUIDGenerator.class)
 public class Workout {
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
+	@AutoGenerateUUID
 	@Column(unique = true, nullable = false, updatable = false)
 	private UUID uuid;
 
@@ -28,15 +32,16 @@ public class Workout {
 	@OneToMany(mappedBy = "workout", cascade = CascadeType.ALL)
 	private List<Exercise> exercises;
 
-	public Workout() {
-		this.uuid = UUID.randomUUID();
-	}
+	public Workout() {}
 
-	public Workout(String name, Instant date, User user, List<Exercise> exercises) {
-		this.uuid = UUID.randomUUID();
+	public Workout(Instant date, User user, List<Exercise> exercises) {
 		this.date = date;
 		this.user = user;
 		this.exercises = exercises;
+	}
+
+	public void setId(Long id) {
+		this.id = id;
 	}
 
 	public Long getId() {
