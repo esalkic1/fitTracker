@@ -9,6 +9,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 @RestController
 @RequestMapping("api/v1/food")
 public class FoodController {
@@ -90,6 +92,22 @@ public class FoodController {
             return ResponseEntity
                     .status(HttpStatus.OK)
                     .body(foodService.updateFood(id, foodDTO));
+        } catch (FoodServiceException e) {
+            return ResponseEntity
+                    .badRequest()
+                    .body(ErrorResponse.from(e.getErrorType(), e.getMessage()));
+        }
+    }
+
+    @PatchMapping("{id}")
+    public ResponseEntity<?> patchFood(
+            @PathVariable Long id,
+            @RequestBody Map<String, String> updates
+    ) {
+        try {
+            return ResponseEntity
+                    .status(HttpStatus.OK)
+                    .body(foodService.patchFood(id, updates));
         } catch (FoodServiceException e) {
             return ResponseEntity
                     .badRequest()
