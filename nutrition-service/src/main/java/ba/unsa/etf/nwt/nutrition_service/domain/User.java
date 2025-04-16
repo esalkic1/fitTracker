@@ -30,7 +30,7 @@ public class User {
     @JsonManagedReference
     private List<Meal> meals;
 
-    protected User() {}
+    public User() {}
 
     public User(List<Meal> meals) {
         this.meals = meals;

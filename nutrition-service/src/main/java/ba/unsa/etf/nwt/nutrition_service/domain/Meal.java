@@ -37,7 +37,7 @@ public class Meal {
     @JsonManagedReference
     private List<Food> foods;
 
-    protected Meal() {}
+    public Meal() {}
 
     public Meal(String name, User user, List<Food> foods) {
         this.name = name;
