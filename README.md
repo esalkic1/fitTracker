@@ -15,10 +15,11 @@ We can now start the applications.
 Due to services being interconnected and dependent they have to be
 started in a specific order.
 1. **Eureka Server** - this must be started first as it acts as Eureka Microservice Registry
-2. **Auth Service**
-3. **Workout Service**
-4. **Nutrition Service**
-5. **Notification Service**
+2. **Config Server** - must be started before services to offer them their app config. More info on setting this up in config-server README.
+3. **Auth Service**
+4. **Workout Service**
+5. **Nutrition Service**
+6. **Notification Service**
 
 
 After all of the above the services should be started. To confirm they started correctly 
