@@ -6,9 +6,11 @@ spring:
     name: nutrition-service
   jpa:
     database: postgresql
-    show-sql: false
+    show-sql: true
     hibernate:
       ddl-auto: update
+      generate_statistics: true
+      format_sql: true
   datasource:
     url: jdbc:postgresql://localhost:5432/nwt_nutrition
     username: postgres
