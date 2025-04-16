@@ -50,11 +50,10 @@ public class NPlusOneTest {
 
         statisticsService.logStatistics();
 
-        // We should have 1 query to get all foods + N queries for meals (N+1 problem)
         long queryCount = statisticsService.getQueryCount();
         System.out.println("Query count: " + queryCount);
 
-        assertTrue(queryCount > 1, "Expected more than 1 query (N+1 problem), but got " + queryCount);
+        assertTrue(queryCount == 1, "Expected 1 query (no N+1 problem), but got " + queryCount);
     }
 
     @Test
@@ -71,11 +70,10 @@ public class NPlusOneTest {
 
         statisticsService.logStatistics();
 
-        // We should have 1 query to get all meals + N queries for users + M queries for food collections
         long queryCount = statisticsService.getQueryCount();
         System.out.println("Query count: " + queryCount);
 
-        assertTrue(queryCount > 1, "Expected more than 1 query (N+1 problem), but got " + queryCount);
+        assertTrue(queryCount == 1, "Expected 1 query (no N+1 problem), but got " + queryCount);
     }
 
     @Test
@@ -89,11 +87,10 @@ public class NPlusOneTest {
 
         statisticsService.logStatistics();
 
-        // We should have 1 query to get all users + N queries for meal collections
         long queryCount = statisticsService.getQueryCount();
         System.out.println("Query count: " + queryCount);
 
-        assertTrue(queryCount > 1, "Expected more than 1 query (N+1 problem), but got " + queryCount);
+        assertTrue(queryCount == 1, "Expected 1 query (no N+1 problem), but got " + queryCount);
     }
 
     @Test
@@ -113,6 +110,6 @@ public class NPlusOneTest {
         long queryCount = statisticsService.getQueryCount();
         System.out.println("Query count for food search: " + queryCount);
 
-        assertTrue(queryCount > 1, "Expected more than 1 query (N+1 problem), but got " + queryCount);
+        assertTrue(queryCount == 1, "Expected 1 query (no N+1 problem), but got " + queryCount);
     }
 }
