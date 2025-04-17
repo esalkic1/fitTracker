@@ -1,0 +1,11 @@
+package ba.unsa.etf.nwt.nutrition_service;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.SpringBootTest;
+
+@SpringBootTest
+public class NutritionServiceApplicationTests {
+    @Test
+    void contextLoads() {
+    }
+}
