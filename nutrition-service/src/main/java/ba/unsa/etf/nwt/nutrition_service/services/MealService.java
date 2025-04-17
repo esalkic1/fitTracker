@@ -1,11 +1,16 @@
 package ba.unsa.etf.nwt.nutrition_service.services;
 
 import ba.unsa.etf.nwt.error_logging.model.ErrorType;
+import ba.unsa.etf.nwt.nutrition_service.domain.Food;
 import ba.unsa.etf.nwt.nutrition_service.domain.Meal;
 import ba.unsa.etf.nwt.nutrition_service.domain.User;
+import ba.unsa.etf.nwt.nutrition_service.dto.FoodDTO;
 import ba.unsa.etf.nwt.nutrition_service.dto.MealDTO;
+import ba.unsa.etf.nwt.nutrition_service.dto.MealWithFoodDTO;
 import ba.unsa.etf.nwt.nutrition_service.exceptions.MealServiceException;
+import ba.unsa.etf.nwt.nutrition_service.repositories.FoodRepository;
 import ba.unsa.etf.nwt.nutrition_service.repositories.MealRepository;
+import jakarta.transaction.Transactional;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
@@ -16,11 +21,13 @@ public class MealService {
     private final MealRepository mealRepository;
     private final UserService userService;
     private final ModelMapper modelMapper;
+    private final FoodRepository foodRepository;
 
-    public MealService(MealRepository mealRepository, UserService userService, ModelMapper modelMapper) {
+    public MealService(MealRepository mealRepository, UserService userService, ModelMapper modelMapper, FoodRepository foodRepository) {
         this.mealRepository = mealRepository;
         this.userService = userService;
         this.modelMapper = modelMapper;
+        this.foodRepository = foodRepository;
     }
 
     public List<Meal> getAllMeals() {
@@ -82,5 +89,27 @@ public class MealService {
         }
 
         return mealRepository.findByNameContainingIgnoreCase(name.trim());
+    }
+
+
+    @Transactional
+    public MealDTO createMealWithFoods(MealWithFoodDTO mealWithFoodDTO) throws MealServiceException {
+        try {
+            User user = userService.getUser(mealWithFoodDTO.getMeal().getUserId());
+
+            Meal meal = modelMapper.map(mealWithFoodDTO.getMeal(), Meal.class);
+            meal.setUser(user);
+            Meal savedMeal = mealRepository.save(meal);
+
+            for (FoodDTO foodDTO : mealWithFoodDTO.getFoods()) {
+                Food food = modelMapper.map(foodDTO, Food.class);
+                food.setMeal(savedMeal);
+                foodRepository.save(food);
+            }
+
+            return modelMapper.map(savedMeal, MealDTO.class);
+        } catch (Exception e) {
+            throw new MealServiceException("Failed to create meal with foods: " + e.getMessage(), ErrorType.VALIDATION_FAILED);
+        }
     }
 }

@@ -5,6 +5,7 @@ import ba.unsa.etf.nwt.nutrition_service.domain.Food;
 import ba.unsa.etf.nwt.nutrition_service.dto.FoodDTO;
 import ba.unsa.etf.nwt.nutrition_service.exceptions.FoodServiceException;
 import ba.unsa.etf.nwt.nutrition_service.services.FoodService;
+import ba.unsa.etf.nwt.nutrition_service.validators.FoodValidator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -31,6 +32,9 @@ class FoodControllerTest {
 
     @Mock
     private FoodService foodService;
+
+    @Mock
+    private FoodValidator foodValidator;
 
     @InjectMocks
     private FoodController foodController;

@@ -11,7 +11,7 @@ public class FoodDTO {
     private Long id;
 
     @NotNull(message = "Food name is required")
-    @Size(min = 3, max = 100, message = "Food nme must be between 3 and 100 characters")
+    @Size(min = 3, max = 100, message = "Food name must be between 3 and 100 characters")
     private String name;
 
     @NotNull(message = "Calories is required")

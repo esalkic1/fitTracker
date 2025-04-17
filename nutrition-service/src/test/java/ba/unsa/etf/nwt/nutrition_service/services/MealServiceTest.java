@@ -4,10 +4,14 @@ import ba.unsa.etf.nwt.error_logging.model.ErrorType;
 import ba.unsa.etf.nwt.nutrition_service.domain.Food;
 import ba.unsa.etf.nwt.nutrition_service.domain.Meal;
 import ba.unsa.etf.nwt.nutrition_service.domain.User;
+import ba.unsa.etf.nwt.nutrition_service.dto.FoodDTO;
 import ba.unsa.etf.nwt.nutrition_service.dto.MealDTO;
+import ba.unsa.etf.nwt.nutrition_service.dto.MealWithFoodDTO;
 import ba.unsa.etf.nwt.nutrition_service.exceptions.MealServiceException;
 import ba.unsa.etf.nwt.nutrition_service.exceptions.UserServiceException;
+import ba.unsa.etf.nwt.nutrition_service.repositories.FoodRepository;
 import ba.unsa.etf.nwt.nutrition_service.repositories.MealRepository;
+import ba.unsa.etf.nwt.nutrition_service.validators.MealValidator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -32,6 +36,12 @@ class MealServiceTest {
     private MealRepository mealRepository;
 
     @Mock
+    private FoodRepository foodRepository;
+
+    @Mock
+    private MealValidator mealValidator;
+
+    @Mock
     private UserService userService;
 
     @Mock
@@ -44,6 +54,8 @@ class MealServiceTest {
     private Food food;
     private Meal meal;
     private MealDTO mealDTO;
+    private FoodDTO foodDTO;
+    private MealWithFoodDTO mealWithFoodDTO;
 
     @BeforeEach
     void setUp() {
@@ -68,6 +80,16 @@ class MealServiceTest {
         mealDTO.setId(1L);
         mealDTO.setName("Pancakes");
         mealDTO.setUserId(1L);
+
+        foodDTO = new FoodDTO();
+        foodDTO.setId(1L);
+        foodDTO.setName("Pancakes");
+        foodDTO.setCalories(200.0);
+        foodDTO.setMealId(1L);
+
+        mealWithFoodDTO = new MealWithFoodDTO();
+        mealWithFoodDTO.setMeal(mealDTO);
+        mealWithFoodDTO.setFoods(Arrays.asList(foodDTO));
     }
 
     @Test
@@ -131,6 +153,46 @@ class MealServiceTest {
 
         MealServiceException exception = assertThrows(MealServiceException.class,
                 () -> mealService.createMeal(invalidMealDTO));
+
+        assertEquals(ErrorType.VALIDATION_FAILED, exception.getErrorType());
+        verify(userService, times(1)).getUser(999L);
+        verify(mealRepository, never()).save(any());
+    }
+
+    @Test
+    void createMealWithFoods_WithValidData_ShouldReturnCreatedMeal() throws UserServiceException, MealServiceException {
+        when(userService.getUser(1L)).thenReturn(user);
+        when(modelMapper.map(mealDTO, Meal.class)).thenReturn(meal);
+        when(modelMapper.map(foodDTO, Food.class)).thenReturn(food);
+        when(mealRepository.save(any(Meal.class))).thenReturn(meal);
+        when(modelMapper.map(meal, MealDTO.class)).thenReturn(mealDTO);
+
+        MealDTO result = mealService.createMealWithFoods(mealWithFoodDTO);
+
+        assertEquals(mealDTO, result);
+        verify(userService, times(1)).getUser(1L);
+        verify(mealRepository, times(1)).save(any(Meal.class));
+        verify(modelMapper, times(1)).map(mealDTO, Meal.class);
+        verify(modelMapper, times(1)).map(meal, MealDTO.class);
+    }
+
+    @Test
+    void createMealWithFoods_WithInvalidUserId_ShouldThrowException() throws UserServiceException {
+        MealDTO invalidMealDTO = new MealDTO();
+        invalidMealDTO.setId(1L);
+        invalidMealDTO.setName("Pancakes");
+        invalidMealDTO.setUserId(999L);
+
+        MealWithFoodDTO invalidMealWithFoodDTO = new MealWithFoodDTO();
+        invalidMealWithFoodDTO.setMeal(invalidMealDTO);
+        invalidMealWithFoodDTO.setFoods(Arrays.asList());
+
+        when(userService.getUser(999L)).thenThrow(
+                new UserServiceException("User with ID 999 not found", ErrorType.ENTITY_NOT_FOUND)
+        );
+
+        MealServiceException exception = assertThrows(MealServiceException.class,
+                () -> mealService.createMealWithFoods(invalidMealWithFoodDTO));
 
         assertEquals(ErrorType.VALIDATION_FAILED, exception.getErrorType());
         verify(userService, times(1)).getUser(999L);
