@@ -7,6 +7,9 @@ import ba.unsa.etf.nwt.workout_service.domain.Workout;
 import ba.unsa.etf.nwt.workout_service.dto.ExerciseDTO;
 import ba.unsa.etf.nwt.workout_service.exceptions.ExerciseServiceException;
 import ba.unsa.etf.nwt.workout_service.repositories.ExerciseRepository;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.fge.jsonpatch.JsonPatch;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -231,5 +234,145 @@ public class ExerciseServiceTest {
         assertEquals(ErrorType.ENTITY_NOT_FOUND, exception.getErrorType());
         verify(exerciseRepository, times(1)).findById(999L);
         verify(exerciseRepository, never()).delete(any());
+    }
+
+    @Test
+    void patchExercise_ValidPatch_ShouldUpdateExercise() throws Exception {
+        Exercise existingExercise = new Exercise();
+        existingExercise.setId(1L);
+        existingExercise.setReps(10);
+        existingExercise.setSets(3);
+        existingExercise.setWeight(50.0);
+        existingExercise.setExerciseDetails(exerciseDetails);
+        existingExercise.setWorkout(workout);
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        JsonNode patchNode = objectMapper.readTree(
+                "[{\"op\":\"replace\",\"path\":\"/reps\",\"value\":15}," +
+                        "{\"op\":\"replace\",\"path\":\"/weight\",\"value\":60.0}]"
+        );
+        JsonPatch patch = JsonPatch.fromJson(patchNode);
+
+        when(exerciseRepository.findById(1L)).thenReturn(Optional.of(existingExercise));
+        when(exerciseRepository.save(any(Exercise.class))).thenAnswer(i -> i.getArgument(0));
+
+        ExerciseDTO mappedDTO = new ExerciseDTO();
+        mappedDTO.setId(1L);
+        mappedDTO.setReps(15);
+        mappedDTO.setSets(3);
+        mappedDTO.setWeight(60.0);
+        mappedDTO.setExerciseDetailsId(1L);
+        mappedDTO.setWorkoutId(1L);
+        when(modelMapper.map(any(Exercise.class), eq(ExerciseDTO.class))).thenReturn(mappedDTO);
+
+        ExerciseDTO result = exerciseService.patchExercise(1L, patch);
+
+        assertNotNull(result);
+        assertEquals(15, result.getReps());
+        assertEquals(60.0, result.getWeight());
+        assertEquals(3, result.getSets());
+        assertEquals(1L, result.getExerciseDetailsId());
+        assertEquals(1L, result.getWorkoutId());
+
+        verify(exerciseRepository).findById(1L);
+        verify(exerciseRepository).save(any(Exercise.class));
+    }
+
+    @Test
+    void patchExercise_NonExistingId_ShouldThrowException() throws Exception {
+        ObjectMapper objectMapper = new ObjectMapper();
+        JsonNode patchNode = objectMapper.readTree("[{\"op\":\"replace\",\"path\":\"/reps\",\"value\":15}]");
+        JsonPatch patch = JsonPatch.fromJson(patchNode);
+
+        when(exerciseRepository.findById(anyLong())).thenReturn(Optional.empty());
+
+        ExerciseServiceException exception = assertThrows(ExerciseServiceException.class, () -> {
+            exerciseService.patchExercise(999L, patch);
+        });
+
+        assertEquals("Could not find exercise with id: 999", exception.getMessage());
+        assertEquals(ErrorType.ENTITY_NOT_FOUND, exception.getErrorType());
+        verify(exerciseRepository).findById(999L);
+        verify(exerciseRepository, never()).save(any());
+    }
+
+    @Test
+    void patchExercise_InvalidPatchOperation_ShouldThrowException() throws Exception {
+        Exercise existingExercise = new Exercise();
+        existingExercise.setId(1L);
+        existingExercise.setReps(10);
+        existingExercise.setSets(3);
+        existingExercise.setWeight(50.0);
+        existingExercise.setExerciseDetails(exerciseDetails);
+        existingExercise.setWorkout(workout);
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        JsonNode patchNode = objectMapper.readTree("[{\"op\":\"replace\",\"path\":\"/invalidField\",\"value\":15}]");
+        JsonPatch patch = JsonPatch.fromJson(patchNode);
+
+        when(exerciseRepository.findById(1L)).thenReturn(Optional.of(existingExercise));
+
+        ExerciseDTO mockDTO = new ExerciseDTO();
+        when(modelMapper.map(any(Exercise.class), eq(ExerciseDTO.class))).thenReturn(mockDTO);
+
+        ExerciseServiceException exception = assertThrows(ExerciseServiceException.class, () -> {
+            exerciseService.patchExercise(1L, patch);
+        });
+
+        assertTrue(exception.getMessage().contains("Failed to apply patch"));
+        assertEquals(ErrorType.VALIDATION_FAILED, exception.getErrorType());
+        verify(exerciseRepository).findById(1L);
+        verify(exerciseRepository, never()).save(any());
+    }
+
+    @Test
+    void patchExercise_PatchMultipleFields_ShouldUpdateAllFields() throws Exception {
+        Exercise existingExercise = new Exercise();
+        existingExercise.setId(1L);
+        existingExercise.setReps(10);
+        existingExercise.setSets(3);
+        existingExercise.setWeight(50.0);
+        existingExercise.setExerciseDetails(exerciseDetails);
+        existingExercise.setWorkout(workout);
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        JsonNode patchNode = objectMapper.readTree(
+                "[{\"op\":\"replace\",\"path\":\"/reps\",\"value\":15}," +
+                        "{\"op\":\"replace\",\"path\":\"/sets\",\"value\":4}," +
+                        "{\"op\":\"replace\",\"path\":\"/weight\",\"value\":75.5}]"
+        );
+        JsonPatch patch = JsonPatch.fromJson(patchNode);
+
+        Exercise patchedExercise = new Exercise();
+        patchedExercise.setId(1L);
+        patchedExercise.setReps(15);
+        patchedExercise.setSets(4);
+        patchedExercise.setWeight(75.5);
+        patchedExercise.setExerciseDetails(exerciseDetails);
+        patchedExercise.setWorkout(workout);
+
+        when(exerciseRepository.findById(1L)).thenReturn(Optional.of(existingExercise));
+        when(exerciseRepository.save(any(Exercise.class))).thenReturn(patchedExercise);
+
+        ExerciseDTO resultDTO = new ExerciseDTO();
+        resultDTO.setId(1L);
+        resultDTO.setReps(15);
+        resultDTO.setSets(4);
+        resultDTO.setWeight(75.5);
+        resultDTO.setExerciseDetailsId(1L);
+        resultDTO.setWorkoutId(1L);
+        when(modelMapper.map(any(Exercise.class), eq(ExerciseDTO.class))).thenReturn(resultDTO);
+
+        ExerciseDTO result = exerciseService.patchExercise(1L, patch);
+
+        assertNotNull(result);
+        assertEquals(15, result.getReps());
+        assertEquals(4, result.getSets());
+        assertEquals(75.5, result.getWeight());
+        assertEquals(1L, result.getExerciseDetailsId());
+        assertEquals(1L, result.getWorkoutId());
+
+        verify(exerciseRepository).findById(1L);
+        verify(exerciseRepository).save(any(Exercise.class));
     }
 }

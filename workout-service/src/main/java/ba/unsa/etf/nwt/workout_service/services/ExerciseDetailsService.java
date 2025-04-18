@@ -4,6 +4,11 @@ import ba.unsa.etf.nwt.error_logging.model.ErrorType;
 import ba.unsa.etf.nwt.workout_service.domain.ExerciseDetails;
 import ba.unsa.etf.nwt.workout_service.exceptions.ExerciseDetailsServiceException;
 import ba.unsa.etf.nwt.workout_service.repositories.ExerciseDetailsRepository;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.fge.jsonpatch.JsonPatch;
+import com.github.fge.jsonpatch.JsonPatchException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -78,5 +83,31 @@ public class ExerciseDetailsService {
                 .orElseThrow(() -> new ExerciseDetailsServiceException("Could not find exercise details with id: " + id, ErrorType.ENTITY_NOT_FOUND));
 
         exerciseDetailsRepository.delete(exerciseDetails);
+    }
+
+    public ExerciseDetails patchExerciseDetails(Long id, JsonPatch patch) throws ExerciseDetailsServiceException {
+        ExerciseDetails existing = exerciseDetailsRepository.findById(id)
+                .orElseThrow(() -> new ExerciseDetailsServiceException("Could not find exercise details with id: " + id, ErrorType.ENTITY_NOT_FOUND));
+
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        try {
+            JsonNode originalNode = objectMapper.convertValue(existing, JsonNode.class);
+
+            JsonNode patchedNode = patch.apply(originalNode);
+
+            ExerciseDetails patched = objectMapper.treeToValue(patchedNode, ExerciseDetails.class);
+
+            if (patched.getName() != null) existing.setName(patched.getName());
+            if (patched.getDescription() != null) existing.setDescription(patched.getDescription());
+            if (patched.getMuscleGroup() != null) existing.setMuscleGroup(patched.getMuscleGroup());
+            if (patched.getEquipment() != null) existing.setEquipment(patched.getEquipment());
+            if (patched.getDifficultyLevel() != null) existing.setDifficultyLevel(patched.getDifficultyLevel());
+
+            return exerciseDetailsRepository.save(existing);
+
+        } catch (JsonPatchException | JsonProcessingException e) {
+            throw new ExerciseDetailsServiceException("Failed to apply patch: " + e.getMessage(), ErrorType.VALIDATION_FAILED);
+        }
     }
 }

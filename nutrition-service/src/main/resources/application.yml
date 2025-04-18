@@ -1,18 +1,7 @@
-server:
-  port: 9020
-
 spring:
   application:
     name: nutrition-service
-  jpa:
-    database: postgresql
-    show-sql: true
-    hibernate:
-      ddl-auto: update
-      generate_statistics: true
-      format_sql: true
-  datasource:
-    url: jdbc:postgresql://localhost:5432/nwt_nutrition
-    username: postgres
-    password:
-    driver-class-name: org.postgresql.Driver
+  profiles:
+    active: dev
+  config:
+    import: configserver:http://localhost:8888

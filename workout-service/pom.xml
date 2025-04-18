@@ -37,6 +37,10 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-actuator</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-config-client</artifactId>
+		</dependency>
 
 		<dependency>
 			<groupId>ba.unsa.etf.nwt.common</groupId>
@@ -78,11 +82,6 @@
 			<scope>test</scope>
 		</dependency>
 		<dependency>
-			<groupId>org.projectlombok</groupId>
-			<artifactId>lombok</artifactId>
-			<optional>true</optional>
-		</dependency>
-		<dependency>
 			<groupId>org.springdoc</groupId>
 			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
 			<version>2.8.5</version>
@@ -101,6 +100,11 @@
 			<artifactId>mockito-core</artifactId>
 			<version>5.16.1</version>
 			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>com.github.java-json-tools</groupId>
+			<artifactId>json-patch</artifactId>
+			<version>1.13</version>
 		</dependency>
 	</dependencies>
 

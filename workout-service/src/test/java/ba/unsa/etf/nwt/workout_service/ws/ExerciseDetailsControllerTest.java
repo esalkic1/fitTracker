@@ -7,6 +7,7 @@ import ba.unsa.etf.nwt.workout_service.exceptions.ExerciseDetailsServiceExceptio
 import ba.unsa.etf.nwt.workout_service.services.ExerciseDetailsService;
 import ba.unsa.etf.nwt.workout_service.services.ExerciseService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.fge.jsonpatch.JsonPatch;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -15,6 +16,7 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.util.Arrays;
@@ -216,5 +218,62 @@ public class ExerciseDetailsControllerTest {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.type", is("ENTITY_NOT_FOUND")));
+    }
+
+    @Test
+    public void testPatchExerciseDetails_Success() throws Exception {
+        String patchString = "[{\"op\": \"replace\", \"path\": \"/name\", \"value\": \"Modified Bench Press\"}]";
+        JsonPatch jsonPatch = new ObjectMapper().readValue(patchString, JsonPatch.class);
+
+        ExerciseDetails patchedExerciseDetails = new ExerciseDetails();
+        patchedExerciseDetails.setId(1L);
+        patchedExerciseDetails.setName("Modified Bench Press");
+        patchedExerciseDetails.setDescription("Chest exercise");
+        patchedExerciseDetails.setMuscleGroup("Chest");
+        patchedExerciseDetails.setEquipment("Barbell");
+        patchedExerciseDetails.setDifficultyLevel("Intermediate");
+
+        when(exerciseDetailsService.patchExerciseDetails(anyLong(), any(JsonPatch.class)))
+                .thenReturn(patchedExerciseDetails);
+
+        mockMvc.perform(patch("/api/v1/exercise-details/1")
+                        .contentType("application/json-patch+json")
+                        .content(patchString))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id", is(1)))
+                .andExpect(jsonPath("$.name", is("Modified Bench Press")));
+    }
+
+    @Test
+    public void testPatchExerciseDetails_NotFound() throws Exception {
+        String patchString = "[{\"op\": \"replace\", \"path\": \"/name\", \"value\": \"Modified Exercise\"}]";
+
+        when(exerciseDetailsService.patchExerciseDetails(anyLong(), any(JsonPatch.class)))
+                .thenThrow(new ExerciseDetailsServiceException(
+                        "Could not find exercise details with id: 999",
+                        ErrorType.ENTITY_NOT_FOUND));
+
+        mockMvc.perform(patch("/api/v1/exercise-details/999")
+                        .contentType("application/json-patch+json")
+                        .content(patchString))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.type", is("ENTITY_NOT_FOUND")));
+    }
+
+    @Test
+    public void testPatchExerciseDetails_ValidationError() throws Exception {
+        String patchString = "[{\"op\": \"replace\", \"path\": \"/difficultyLevel\", \"value\": \"\"}]";
+        JsonPatch jsonPatch = new ObjectMapper().readValue(patchString, JsonPatch.class);
+
+        when(exerciseDetailsService.patchExerciseDetails(anyLong(), any(JsonPatch.class)))
+                .thenThrow(new ExerciseDetailsServiceException(
+                        "Failed to apply patch: Validation failed",
+                        ErrorType.VALIDATION_FAILED));
+
+        mockMvc.perform(patch("/api/v1/exercise-details/1")
+                        .contentType("application/json-patch+json")
+                        .content(patchString))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.type", is("VALIDATION_FAILED")));
     }
 }

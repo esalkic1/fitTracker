@@ -3,11 +3,7 @@ package ba.unsa.etf.nwt.workout_service.dto;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
-import lombok.Data;
 
-import java.util.UUID;
-
-@Data
 public class ExerciseDTO {
     private Long id;
 

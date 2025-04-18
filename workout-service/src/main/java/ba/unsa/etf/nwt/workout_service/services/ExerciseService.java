@@ -7,6 +7,11 @@ import ba.unsa.etf.nwt.workout_service.domain.Workout;
 import ba.unsa.etf.nwt.workout_service.dto.ExerciseDTO;
 import ba.unsa.etf.nwt.workout_service.exceptions.ExerciseServiceException;
 import ba.unsa.etf.nwt.workout_service.repositories.ExerciseRepository;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.fge.jsonpatch.JsonPatch;
+import com.github.fge.jsonpatch.JsonPatchException;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
@@ -93,5 +98,32 @@ public class ExerciseService {
                 .orElseThrow(() -> new ExerciseServiceException("Could not find exercise with id: " + id, ErrorType.ENTITY_NOT_FOUND));
 
         exerciseRepository.delete(exercise);
+    }
+
+    public ExerciseDTO patchExercise(Long id, JsonPatch patch) throws ExerciseServiceException {
+        Exercise existing = exerciseRepository.findById(id)
+                .orElseThrow(() -> new ExerciseServiceException("Could not find exercise with id: " + id, ErrorType.ENTITY_NOT_FOUND));
+
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        try {
+            ExerciseDTO dto = modelMapper.map(existing, ExerciseDTO.class);
+
+            JsonNode patched = patch.apply(objectMapper.convertValue(dto, JsonNode.class));
+            ExerciseDTO patchedDTO = objectMapper.treeToValue(patched, ExerciseDTO.class);
+
+            if (patchedDTO.getWeight() != null) existing.setWeight(patchedDTO.getWeight());
+            if (patchedDTO.getReps() != null) existing.setReps(patchedDTO.getReps());
+
+            Exercise saved = exerciseRepository.save(existing);
+            ExerciseDTO result = modelMapper.map(saved, ExerciseDTO.class);
+            result.setWorkoutId(existing.getWorkout().getId());
+            result.setExerciseDetailsId(existing.getExerciseDetails().getId());
+
+            return result;
+
+        } catch (JsonPatchException | JsonProcessingException e) {
+            throw new ExerciseServiceException("Failed to apply patch: " + e.getMessage(), ErrorType.VALIDATION_FAILED);
+        }
     }
 }

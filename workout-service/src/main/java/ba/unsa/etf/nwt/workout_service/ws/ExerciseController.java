@@ -4,6 +4,7 @@ import ba.unsa.etf.nwt.error_logging.model.ErrorResponse;
 import ba.unsa.etf.nwt.workout_service.dto.ExerciseDTO;
 import ba.unsa.etf.nwt.workout_service.exceptions.ExerciseServiceException;
 import ba.unsa.etf.nwt.workout_service.services.ExerciseService;
+import com.github.fge.jsonpatch.JsonPatch;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -69,4 +70,18 @@ public class ExerciseController {
             );
         }
     }
+
+
+    @PatchMapping(path = "/{id}", consumes = "application/json-patch+json")
+    public ResponseEntity<?> patchExercise(@PathVariable String id, @RequestBody JsonPatch patch) {
+        try {
+            ExerciseDTO updated = exerciseService.patchExercise(Long.parseLong(id), patch);
+            return ResponseEntity.ok(updated);
+        } catch (ExerciseServiceException e) {
+            return ResponseEntity.badRequest().body(ErrorResponse.from(e.getErrorType(), e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Patch failed: " + e.getMessage());
+        }
+    }
+
 }

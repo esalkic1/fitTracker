@@ -1,14 +1,20 @@
 package ba.unsa.etf.nwt.workout_service.services;
 
 import ba.unsa.etf.nwt.error_logging.model.ErrorType;
+import ba.unsa.etf.nwt.workout_service.domain.Exercise;
 import ba.unsa.etf.nwt.workout_service.domain.User;
 import ba.unsa.etf.nwt.workout_service.domain.Workout;
+import ba.unsa.etf.nwt.workout_service.dto.ExerciseDTO;
 import ba.unsa.etf.nwt.workout_service.dto.WorkoutDTO;
+import ba.unsa.etf.nwt.workout_service.dto.WorkoutWithExercisesDTO;
 import ba.unsa.etf.nwt.workout_service.exceptions.WorkoutServiceException;
+import ba.unsa.etf.nwt.workout_service.repositories.ExerciseRepository;
 import ba.unsa.etf.nwt.workout_service.repositories.WorkoutRepository;
+import jakarta.transaction.Transactional;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.util.List;
 
 @Service
@@ -17,10 +23,13 @@ public class WorkoutService {
 	private final UserService userService;
 	private final ModelMapper modelMapper;
 
-	public WorkoutService(final WorkoutRepository workoutRepository, final UserService userService, final ModelMapper modelMapper) {
+	private final ExerciseRepository exerciseRepository;
+
+	public WorkoutService(final WorkoutRepository workoutRepository, final UserService userService, final ModelMapper modelMapper, final ExerciseRepository exerciseRepository) {
 		this.workoutRepository = workoutRepository;
 		this.userService = userService;
 		this.modelMapper = modelMapper;
+		this.exerciseRepository = exerciseRepository;
 	}
 
 	public List<Workout> getAllWorkouts() {
@@ -75,4 +84,33 @@ public class WorkoutService {
 				.orElseThrow(() -> new WorkoutServiceException("Could not find workout with id: " + id, ErrorType.ENTITY_NOT_FOUND));
 		workoutRepository.delete(workout);
 	}
+
+	@Transactional
+	public WorkoutDTO createWorkoutWithExercises(WorkoutWithExercisesDTO request) throws WorkoutServiceException {
+		try {
+			User user = userService.getUserById(request.getWorkout().getUserId());
+
+			Workout workout = modelMapper.map(request.getWorkout(), Workout.class);
+			workout.setUser(user);
+			Workout savedWorkout = workoutRepository.save(workout);
+			for (ExerciseDTO dto : request.getExercises()) {
+				Exercise exercise = modelMapper.map(dto, Exercise.class);
+				exercise.setWorkout(savedWorkout);
+				exerciseRepository.save(exercise);
+			}
+
+			return modelMapper.map(savedWorkout, WorkoutDTO.class);
+
+		} catch (Exception e) {
+			throw new WorkoutServiceException("Failed to create workout with exercises: " + e.getMessage(), ErrorType.VALIDATION_FAILED);
+		}
+	}
+
+	public List<WorkoutDTO> getWorkoutsByUserIdAndDateRange(Long userId, Instant from, Instant to) {
+		return workoutRepository.findWorkoutsByUserIdAndDateBetween(userId, from, to)
+				.stream()
+				.map(w -> modelMapper.map(w, WorkoutDTO.class))
+				.toList();
+	}
+
 }

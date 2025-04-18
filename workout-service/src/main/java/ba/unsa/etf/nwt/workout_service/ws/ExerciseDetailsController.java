@@ -4,6 +4,7 @@ import ba.unsa.etf.nwt.error_logging.model.ErrorResponse;
 import ba.unsa.etf.nwt.workout_service.domain.ExerciseDetails;
 import ba.unsa.etf.nwt.workout_service.exceptions.ExerciseDetailsServiceException;
 import ba.unsa.etf.nwt.workout_service.services.ExerciseDetailsService;
+import com.github.fge.jsonpatch.JsonPatch;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -85,4 +86,17 @@ public class ExerciseDetailsController {
             );
         }
     }
+
+    @PatchMapping(path = "/{id}", consumes = "application/json-patch+json")
+    public ResponseEntity<?> patchExerciseDetails(@PathVariable String id, @RequestBody JsonPatch patch) {
+        try {
+            ExerciseDetails patched = exerciseDetailsService.patchExerciseDetails(Long.parseLong(id), patch);
+            return ResponseEntity.ok(patched);
+        } catch (ExerciseDetailsServiceException e) {
+            return ResponseEntity.badRequest().body(ErrorResponse.from(e.getErrorType(), e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Patch failed: " + e.getMessage());
+        }
+    }
+
 }

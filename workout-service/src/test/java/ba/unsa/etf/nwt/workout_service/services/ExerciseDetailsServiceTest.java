@@ -4,9 +4,12 @@ import ba.unsa.etf.nwt.error_logging.model.ErrorType;
 import ba.unsa.etf.nwt.workout_service.domain.ExerciseDetails;
 import ba.unsa.etf.nwt.workout_service.exceptions.ExerciseDetailsServiceException;
 import ba.unsa.etf.nwt.workout_service.repositories.ExerciseDetailsRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.fge.jsonpatch.JsonPatch;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -269,5 +272,98 @@ public class ExerciseDetailsServiceTest {
         assertTrue(exception.getMessage().contains("Could not find exercise details with id: 999"));
         verify(exerciseDetailsRepository, times(1)).findById(999L);
         verify(exerciseDetailsRepository, never()).delete(any());
+    }
+
+    @Test
+    public void testPatchExerciseDetails_Success() throws Exception {
+        ExerciseDetails existingDetails = new ExerciseDetails();
+        existingDetails.setId(1L);
+        existingDetails.setName("Old Name");
+        existingDetails.setDescription("Old Description");
+        existingDetails.setMuscleGroup("Old Group");
+        existingDetails.setEquipment("Old Equipment");
+        existingDetails.setDifficultyLevel("Beginner");
+
+        when(exerciseDetailsRepository.findById(1L)).thenReturn(Optional.of(existingDetails));
+        when(exerciseDetailsRepository.save(any(ExerciseDetails.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        String patchString = "[{\"op\": \"replace\", \"path\": \"/name\", \"value\": \"New Patched Name\"}]";
+        JsonPatch patch = objectMapper.readValue(patchString, JsonPatch.class);
+
+        ExerciseDetails result = exerciseDetailsService.patchExerciseDetails(1L, patch);
+
+        assertNotNull(result);
+        assertEquals(1L, result.getId());
+        assertEquals("New Patched Name", result.getName());
+        assertEquals("Old Description", result.getDescription());
+        assertEquals("Old Group", result.getMuscleGroup());
+        assertEquals("Old Equipment", result.getEquipment());
+        assertEquals("Beginner", result.getDifficultyLevel());
+
+        verify(exerciseDetailsRepository, times(1)).findById(1L);
+        verify(exerciseDetailsRepository, times(1)).save(any(ExerciseDetails.class));
+
+        ArgumentCaptor<ExerciseDetails> exerciseDetailsCaptor = ArgumentCaptor.forClass(ExerciseDetails.class);
+        verify(exerciseDetailsRepository).save(exerciseDetailsCaptor.capture());
+        ExerciseDetails capturedDetails = exerciseDetailsCaptor.getValue();
+        assertEquals("New Patched Name", capturedDetails.getName());
+    }
+
+    @Test
+    public void testPatchExerciseDetails_MultipleOperations() throws Exception {
+        ExerciseDetails existingDetails = new ExerciseDetails();
+        existingDetails.setId(1L);
+        existingDetails.setName("Old Name");
+        existingDetails.setDescription("Old Description");
+        existingDetails.setMuscleGroup("Old Group");
+        existingDetails.setEquipment("Old Equipment");
+        existingDetails.setDifficultyLevel("Beginner");
+
+        when(exerciseDetailsRepository.findById(1L)).thenReturn(Optional.of(existingDetails));
+        when(exerciseDetailsRepository.save(any(ExerciseDetails.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        String patchString = "[" +
+                "{\"op\": \"replace\", \"path\": \"/name\", \"value\": \"New Patched Name\"}," +
+                "{\"op\": \"replace\", \"path\": \"/muscleGroup\", \"value\": \"New Muscle Group\"}," +
+                "{\"op\": \"replace\", \"path\": \"/difficultyLevel\", \"value\": \"Advanced\"}" +
+                "]";
+        JsonPatch patch = objectMapper.readValue(patchString, JsonPatch.class);
+
+        ExerciseDetails result = exerciseDetailsService.patchExerciseDetails(1L, patch);
+
+        assertNotNull(result);
+        assertEquals(1L, result.getId());
+        assertEquals("New Patched Name", result.getName());
+        assertEquals("Old Description", result.getDescription());
+        assertEquals("New Muscle Group", result.getMuscleGroup());
+        assertEquals("Old Equipment", result.getEquipment());
+        assertEquals("Advanced", result.getDifficultyLevel());
+    }
+
+    @Test
+    public void testPatchExerciseDetails_NotFound() {
+        when(exerciseDetailsRepository.findById(999L)).thenReturn(Optional.empty());
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        String patchString = "[{\"op\": \"replace\", \"path\": \"/name\", \"value\": \"New Name\"}]";
+        JsonPatch patch = null;
+        try {
+            patch = objectMapper.readValue(patchString, JsonPatch.class);
+        } catch (Exception e) {
+            fail("Failed to create JSON patch: " + e.getMessage());
+        }
+
+        JsonPatch finalPatch = patch;
+        ExerciseDetailsServiceException exception = assertThrows(
+                ExerciseDetailsServiceException.class,
+                () -> exerciseDetailsService.patchExerciseDetails(999L, finalPatch)
+        );
+
+        assertEquals(ErrorType.ENTITY_NOT_FOUND, exception.getErrorType());
+        assertTrue(exception.getMessage().contains("Could not find exercise details with id: 999"));
+        verify(exerciseDetailsRepository, times(1)).findById(999L);
+        verify(exerciseDetailsRepository, never()).save(any());
     }
 }

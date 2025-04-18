@@ -1,0 +1,33 @@
+server:
+  port: 8888
+
+spring:
+  application:
+    name: config-server
+  profiles:
+    active: deployed
+
+---
+
+spring:
+  config:
+    activate:
+      on-profile: native
+  cloud:
+    config:
+      server:
+        native:
+          search-locations: # file:///Users/path/to/your/configs -> pass path to your own configs folder
+
+---
+
+spring:
+  config:
+    activate:
+      on-profile: deployed
+  cloud:
+    config:
+      server:
+        git:
+          uri: https://github.com/EmirKapic/nwt_config_server.git
+          clone-on-start: true

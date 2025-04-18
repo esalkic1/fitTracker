@@ -6,6 +6,7 @@ import ba.unsa.etf.nwt.workout_service.dto.ExerciseDTO;
 import ba.unsa.etf.nwt.workout_service.exceptions.ExerciseServiceException;
 import ba.unsa.etf.nwt.workout_service.services.ExerciseService;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.fge.jsonpatch.JsonPatch;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -253,5 +254,88 @@ public class ExerciseControllerTest {
                 .andExpect(jsonPath("$.message", is("Could not find exercise with id: 99")));
 
         verify(exerciseService, times(1)).deleteExercise(99L);
+    }
+
+    @Test
+    void patchExercise_WithValidData_ReturnsUpdatedExercise() throws Exception {
+        String jsonPatch = "[" +
+                "{ \"op\": \"replace\", \"path\": \"/reps\", \"value\": 15 }," +
+                "{ \"op\": \"replace\", \"path\": \"/weight\", \"value\": 65.0 }" +
+                "]";
+
+        ExerciseDTO patchedDTO = new ExerciseDTO();
+        patchedDTO.setId(1L);
+        patchedDTO.setSets(3);
+        patchedDTO.setReps(15);
+        patchedDTO.setWeight(65.0);
+        patchedDTO.setExerciseDetailsId(1L);
+        patchedDTO.setWorkoutId(1L);
+
+        when(exerciseService.patchExercise(eq(1L), any(JsonPatch.class))).thenReturn(patchedDTO);
+
+        mockMvc.perform(patch("/api/v1/exercise/1")
+                        .contentType("application/json-patch+json")
+                        .content(jsonPatch))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id", is(1)))
+                .andExpect(jsonPath("$.sets", is(3)))
+                .andExpect(jsonPath("$.reps", is(15)))
+                .andExpect(jsonPath("$.weight", is(65.0)))
+                .andExpect(jsonPath("$.exerciseDetailsId", is(1)))
+                .andExpect(jsonPath("$.workoutId", is(1)));
+
+        verify(exerciseService, times(1)).patchExercise(eq(1L), any(JsonPatch.class));
+    }
+
+    @Test
+    void patchExercise_WhenExerciseDoesNotExist_ReturnsBadRequest() throws Exception {
+        String jsonPatch = "[" +
+                "{ \"op\": \"replace\", \"path\": \"/reps\", \"value\": 15 }" +
+                "]";
+
+        when(exerciseService.patchExercise(eq(99L), any(JsonPatch.class))).thenThrow(
+                new ExerciseServiceException("Could not find exercise with id: 99", ErrorType.ENTITY_NOT_FOUND)
+        );
+
+        mockMvc.perform(patch("/api/v1/exercise/99")
+                        .contentType("application/json-patch+json")
+                        .content(jsonPatch))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.type", is("ENTITY_NOT_FOUND")))
+                .andExpect(jsonPath("$.message", is("Could not find exercise with id: 99")));
+
+        verify(exerciseService, times(1)).patchExercise(eq(99L), any(JsonPatch.class));
+    }
+
+    @Test
+    void patchExercise_WithValidationFailure_ReturnsBadRequest() throws Exception {
+        String jsonPatch = "[" +
+                "{ \"op\": \"replace\", \"path\": \"/weight\", \"value\": -10.0 }" +
+                "]";
+
+        when(exerciseService.patchExercise(eq(1L), any(JsonPatch.class))).thenThrow(
+                new ExerciseServiceException("Failed to apply patch: Weight cannot be negative", ErrorType.VALIDATION_FAILED)
+        );
+
+        mockMvc.perform(patch("/api/v1/exercise/1")
+                        .contentType("application/json-patch+json")
+                        .content(jsonPatch))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.type", is("VALIDATION_FAILED")))
+                .andExpect(jsonPath("$.message", is("Failed to apply patch: Weight cannot be negative")));
+
+        verify(exerciseService, times(1)).patchExercise(eq(1L), any(JsonPatch.class));
+    }
+
+    @Test
+    void patchExercise_WithMalformedJsonPatch_ReturnsInternalServerError() throws Exception {
+        String malformedJsonPatch = "{ This is not valid JSON patch }";
+
+        mockMvc.perform(patch("/api/v1/exercise/1")
+                        .contentType("application/json-patch+json")
+                        .content(malformedJsonPatch))
+                .andExpect(status().isBadRequest());
+
+        verify(exerciseService, never()).patchExercise(anyLong(), any(JsonPatch.class));
     }
 }
