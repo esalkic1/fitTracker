@@ -1,6 +1,7 @@
 package ba.unsa.etf.nwt.nutrition_service.ws;
 
 import ba.unsa.etf.nwt.error_logging.model.ErrorResponse;
+import ba.unsa.etf.nwt.nutrition_service.clients.WorkoutClient;
 import ba.unsa.etf.nwt.nutrition_service.dto.FoodDTO;
 import ba.unsa.etf.nwt.nutrition_service.exceptions.FoodServiceException;
 import ba.unsa.etf.nwt.nutrition_service.services.FoodService;
@@ -16,10 +17,17 @@ import java.util.Map;
 public class FoodController {
     private final FoodService foodService;
     private final FoodValidator validator;
+    private final WorkoutClient workoutClient;
 
-    public FoodController(FoodService foodService, FoodValidator validator) {
+    public FoodController(FoodService foodService, WorkoutClient workoutClient, FoodValidator validator) {
         this.foodService = foodService;
         this.validator = validator;
+        this.workoutClient = workoutClient;
+    }
+
+    @GetMapping("/ping-workout")
+    public String pingWorkout() {
+        return workoutClient.ping();
     }
 
     @GetMapping("")
