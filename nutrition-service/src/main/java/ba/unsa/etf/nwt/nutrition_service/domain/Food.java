@@ -32,7 +32,7 @@ public class Food {
     @JsonBackReference
     private Meal meal;
 
-    protected Food() {}
+    public Food() {}
 
     public Food(String name, Double calories, Meal meal) {
         this.name = name;

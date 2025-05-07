@@ -1,30 +1,25 @@
 package ba.unsa.etf.nwt.nutrition_service.ws;
 
 import ba.unsa.etf.nwt.error_logging.model.ErrorResponse;
-import ba.unsa.etf.nwt.nutrition_service.clients.WorkoutClient;
 import ba.unsa.etf.nwt.nutrition_service.dto.FoodDTO;
 import ba.unsa.etf.nwt.nutrition_service.exceptions.FoodServiceException;
 import ba.unsa.etf.nwt.nutrition_service.services.FoodService;
-import jakarta.validation.Valid;
+import ba.unsa.etf.nwt.nutrition_service.validators.FoodValidator;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("api/v1/food")
 public class FoodController {
     private final FoodService foodService;
+    private final FoodValidator validator;
 
-    private final WorkoutClient workoutClient;
-
-    public FoodController(FoodService foodService, WorkoutClient workoutClient) {
+    public FoodController(FoodService foodService, FoodValidator validator) {
         this.foodService = foodService;
-        this.workoutClient = workoutClient;
-    }
-
-    @GetMapping("/ping-workout")
-    public String pingWorkout() {
-        return workoutClient.ping();
+        this.validator = validator;
     }
 
     @GetMapping("")
@@ -66,6 +61,7 @@ public class FoodController {
             @RequestParam(name = "max") Integer maxCalories
     ) {
         try {
+            validator.validateCaloriesRange(minCalories, maxCalories);
             return ResponseEntity
                     .status(HttpStatus.OK)
                     .body(foodService.searchFoodsByCalorieRange(minCalories, maxCalories));
@@ -77,13 +73,13 @@ public class FoodController {
     }
 
     @PostMapping("")
-    public ResponseEntity<?> createFood(@Valid @RequestBody FoodDTO foodDTO) {
+    public ResponseEntity<?> createFood(@RequestBody FoodDTO foodDTO) {
         try {
+            validator.validateFoodDTO(foodDTO, "create");
             return ResponseEntity
                     .status(HttpStatus.CREATED)
                     .body(foodService.createFood(foodDTO));
         } catch (FoodServiceException e) {
-            System.out.println(e.getMessage());
             return ResponseEntity
                     .badRequest()
                     .body(ErrorResponse.from(e.getErrorType(), e.getMessage()));
@@ -93,12 +89,30 @@ public class FoodController {
     @PutMapping("{id}")
     public ResponseEntity<?> updateFood(
             @PathVariable Long id,
-            @Valid @RequestBody FoodDTO foodDTO
+            @RequestBody FoodDTO foodDTO
     ) {
         try {
+            validator.validateFoodDTO(foodDTO, "update");
             return ResponseEntity
                     .status(HttpStatus.OK)
                     .body(foodService.updateFood(id, foodDTO));
+        } catch (FoodServiceException e) {
+            return ResponseEntity
+                    .badRequest()
+                    .body(ErrorResponse.from(e.getErrorType(), e.getMessage()));
+        }
+    }
+
+    @PatchMapping("{id}")
+    public ResponseEntity<?> patchFood(
+            @PathVariable Long id,
+            @RequestBody Map<String, String> updates
+    ) {
+        try {
+            validator.validatePatch(updates);
+            return ResponseEntity
+                    .status(HttpStatus.OK)
+                    .body(foodService.patchFood(id, updates));
         } catch (FoodServiceException e) {
             return ResponseEntity
                     .badRequest()

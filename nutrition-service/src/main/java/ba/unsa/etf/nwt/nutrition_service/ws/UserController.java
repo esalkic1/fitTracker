@@ -4,7 +4,6 @@ import ba.unsa.etf.nwt.error_logging.model.ErrorResponse;
 import ba.unsa.etf.nwt.nutrition_service.domain.User;
 import ba.unsa.etf.nwt.nutrition_service.exceptions.UserServiceException;
 import ba.unsa.etf.nwt.nutrition_service.services.UserService;
-import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -39,7 +38,7 @@ public class UserController {
     }
 
     @PostMapping("")
-    public ResponseEntity<?> createUser(@Valid @RequestBody User user) {
+    public ResponseEntity<?> createUser(@RequestBody User user) {
         try {
             return ResponseEntity
                     .status(HttpStatus.CREATED)

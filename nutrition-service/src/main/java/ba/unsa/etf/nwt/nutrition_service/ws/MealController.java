@@ -2,9 +2,11 @@ package ba.unsa.etf.nwt.nutrition_service.ws;
 
 import ba.unsa.etf.nwt.error_logging.model.ErrorResponse;
 import ba.unsa.etf.nwt.nutrition_service.dto.MealDTO;
+import ba.unsa.etf.nwt.nutrition_service.dto.MealWithFoodDTO;
+import ba.unsa.etf.nwt.nutrition_service.exceptions.FoodServiceException;
 import ba.unsa.etf.nwt.nutrition_service.exceptions.MealServiceException;
 import ba.unsa.etf.nwt.nutrition_service.services.MealService;
-import jakarta.validation.Valid;
+import ba.unsa.etf.nwt.nutrition_service.validators.MealValidator;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -13,9 +15,11 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("api/v1/meal")
 public class MealController {
     private final MealService mealService;
+    private final MealValidator mealValidator;
 
-    public MealController(MealService mealService) {
+    public MealController(MealService mealService, MealValidator mealValidator) {
         this.mealService = mealService;
+        this.mealValidator = mealValidator;
     }
 
     @GetMapping("")
@@ -50,8 +54,9 @@ public class MealController {
     }
 
     @PostMapping("")
-    public ResponseEntity<?> createMeal(@Valid @RequestBody MealDTO mealDTO) {
+    public ResponseEntity<?> createMeal(@RequestBody MealDTO mealDTO) {
         try {
+            mealValidator.validateMealDTO(mealDTO, "create");
             return ResponseEntity
                     .status(HttpStatus.CREATED)
                     .body(mealService.createMeal(mealDTO));
@@ -62,12 +67,27 @@ public class MealController {
         }
     }
 
+    @PostMapping("/with-food")
+    public ResponseEntity<?> createMealWithFoods(@RequestBody MealWithFoodDTO mealWithFoodDTO) {
+        try {
+            mealValidator.validateMealWithFoodDTO(mealWithFoodDTO, "create");
+            return ResponseEntity
+                    .status(HttpStatus.CREATED)
+                    .body(mealService.createMealWithFoods(mealWithFoodDTO));
+        } catch (MealServiceException | FoodServiceException e) {
+            return ResponseEntity
+                    .badRequest()
+                    .body(ErrorResponse.from(e.getErrorType(), e.getMessage()));
+        }
+    }
+
     @PutMapping("{id}")
     public ResponseEntity<?> updateFood(
             @PathVariable Long id,
-            @Valid @RequestBody MealDTO mealDTO
+            @RequestBody MealDTO mealDTO
     ) {
         try {
+            mealValidator.validateMealDTO(mealDTO, "update");
             return ResponseEntity
                     .status(HttpStatus.OK)
                     .body(mealService.updateMeal(id, mealDTO));
