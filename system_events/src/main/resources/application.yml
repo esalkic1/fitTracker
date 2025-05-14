@@ -1,0 +1,17 @@
+spring:
+  application:
+    name: system_events
+  jpa:
+    database: postgresql
+    show-sql: false
+    hibernate:
+      ddl-auto: update
+  datasource:
+    url: jdbc:postgresql://localhost:5432/nwt_events
+    username: postgres
+    password:
+    driver-class-name: org.postgresql.Driver
+
+grpc:
+  server:
+    port: 9060

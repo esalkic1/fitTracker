@@ -2,6 +2,8 @@ package ba.unsa.etf.nwt.auth.spring_security.config;
 
 import ba.unsa.etf.nwt.auth.services.UserService;
 import ba.unsa.etf.nwt.auth.spring_security.SecurityConfigurer;
+import net.devh.boot.grpc.server.security.authentication.BasicGrpcAuthenticationReader;
+import net.devh.boot.grpc.server.security.authentication.GrpcAuthenticationReader;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -40,5 +42,10 @@ public class WebSecurityConfiguration {
 	@Bean
 	public PasswordEncoder passwordEncoder() {
 		return new BCryptPasswordEncoder();
+	}
+
+	@Bean
+	public GrpcAuthenticationReader grpcAuthenticationReader(){
+		return new BasicGrpcAuthenticationReader();
 	}
 }
