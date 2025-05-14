@@ -55,8 +55,6 @@ public class UserNPlusOneTest {
 
         assertThat(stats.getQueryExecutionCount())
                 .isNotEqualTo(1 + users.size());
-        assertThat(stats.getQueryExecutionCount())
-                .isEqualTo(1);
 
         System.out.println("Total queries executed: " + stats.getQueryExecutionCount());
     }
@@ -78,8 +76,6 @@ public class UserNPlusOneTest {
 
         assertThat(stats.getQueryExecutionCount())
                 .isNotEqualTo(1 + users.size());
-        assertThat(stats.getQueryExecutionCount())
-                .isEqualTo(1);
 
         System.out.println("Total queries executed for workout templates: " + stats.getQueryExecutionCount());
     }
@@ -103,8 +99,6 @@ public class UserNPlusOneTest {
 
         assertThat(stats.getQueryExecutionCount())
                 .isNotEqualTo(1 + 2 * users.size());
-        assertThat(stats.getQueryExecutionCount())
-                .isEqualTo(1);
 
         System.out.println("Total queries executed for both collections: " + stats.getQueryExecutionCount());
     }

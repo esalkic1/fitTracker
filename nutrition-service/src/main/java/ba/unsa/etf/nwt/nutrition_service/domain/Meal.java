@@ -9,6 +9,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
@@ -37,11 +38,14 @@ public class Meal {
     @JsonManagedReference
     private List<Food> foods;
 
+    private Instant date;
+
     public Meal() {}
 
-    public Meal(String name, User user, List<Food> foods) {
+    public Meal(String name, User user, List<Food> foods, Instant date) {
         this.name = name;
         this.user = user;
         this.foods = foods;
+        this.date = date;
     }
 }

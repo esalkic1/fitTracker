@@ -1,6 +1,7 @@
 package ba.unsa.etf.nwt.workout_service.services;
 
 import ba.unsa.etf.nwt.error_logging.model.ErrorType;
+import ba.unsa.etf.nwt.workout_service.clients.NutritionClient;
 import ba.unsa.etf.nwt.workout_service.domain.Exercise;
 import ba.unsa.etf.nwt.workout_service.domain.User;
 import ba.unsa.etf.nwt.workout_service.domain.Workout;
@@ -12,9 +13,14 @@ import ba.unsa.etf.nwt.workout_service.repositories.ExerciseRepository;
 import ba.unsa.etf.nwt.workout_service.repositories.WorkoutRepository;
 import jakarta.transaction.Transactional;
 import org.modelmapper.ModelMapper;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 @Service
@@ -24,12 +30,14 @@ public class WorkoutService {
 	private final ModelMapper modelMapper;
 
 	private final ExerciseRepository exerciseRepository;
+	private final NutritionClient nutritionClient;
 
-	public WorkoutService(final WorkoutRepository workoutRepository, final UserService userService, final ModelMapper modelMapper, final ExerciseRepository exerciseRepository) {
+	public WorkoutService(final WorkoutRepository workoutRepository, final UserService userService, final ModelMapper modelMapper, final ExerciseRepository exerciseRepository, final NutritionClient nutritionClient) {
 		this.workoutRepository = workoutRepository;
 		this.userService = userService;
 		this.modelMapper = modelMapper;
 		this.exerciseRepository = exerciseRepository;
+		this.nutritionClient = nutritionClient;
 	}
 
 	public List<Workout> getAllWorkouts() {
@@ -89,10 +97,19 @@ public class WorkoutService {
 	public WorkoutDTO createWorkoutWithExercises(WorkoutWithExercisesDTO request) throws WorkoutServiceException {
 		try {
 			User user = userService.getUserById(request.getWorkout().getUserId());
-
 			Workout workout = modelMapper.map(request.getWorkout(), Workout.class);
+
+			// Nutrition communication
+			if (isWorkoutIntense(request.getExercises())) {
+				boolean hasMeal = nutritionClient.hasRecentMeal(request.getWorkout().getUserId(), workout.getDate());
+				if (!hasMeal) {
+					throw new WorkoutServiceException("User must log a meal before intense workouts", ErrorType.VALIDATION_FAILED);
+				}
+			}
+
 			workout.setUser(user);
 			Workout savedWorkout = workoutRepository.save(workout);
+
 			for (ExerciseDTO dto : request.getExercises()) {
 				Exercise exercise = modelMapper.map(dto, Exercise.class);
 				exercise.setWorkout(savedWorkout);
@@ -113,4 +130,58 @@ public class WorkoutService {
 				.toList();
 	}
 
+	public Boolean hadIntenseWorkout(@RequestParam Long userId, @RequestParam Instant date) {
+		Instant startOfDay = date.atZone(ZoneOffset.UTC).toLocalDate().atStartOfDay(ZoneOffset.UTC).toInstant();
+		Instant endOfDay = startOfDay.plus(1, ChronoUnit.DAYS);
+
+		List<Workout> workouts = workoutRepository.findWorkoutsByUserIdAndDateBetween(userId, startOfDay, endOfDay);
+
+		return workouts.stream()
+				.anyMatch(workout -> {
+					List<ExerciseDTO> exerciseDTOs = workout.getExercises().stream()
+							.map(ex -> modelMapper.map(ex, ExerciseDTO.class))
+							.toList();
+					return isWorkoutIntense(exerciseDTOs);
+				});
+	}
+
+	private boolean isWorkoutIntense(List<ExerciseDTO> exercises) {
+		if (exercises.size() > 3) return true;
+
+		for (ExerciseDTO e : exercises) {
+			Double weight = e.getWeight();
+			Integer reps = e.getReps();
+			Integer sets = e.getSets();
+
+			if (weight != null && weight > 100) return true;
+			if (reps != null && reps > 10 &&
+					sets != null && sets > 3) return true;
+		}
+
+		return false;
+	}
+
+	public String getWorkoutIntensityLevel(Long userId, Instant date) {
+		Instant startOfDay = date.truncatedTo(ChronoUnit.DAYS);
+		Instant endOfDay = startOfDay.plus(1, ChronoUnit.DAYS);
+
+		List<Workout> workouts = workoutRepository.findWorkoutsByUserIdAndDateBetween(userId, startOfDay, endOfDay);
+
+		if (workouts.isEmpty()) return "LIGHT";
+
+		int score = 0;
+		for (Workout w : workouts) {
+			for (Exercise ex : w.getExercises()) {
+				if (ex.getWeight() > 100) score += 3;
+				if (ex.getReps() > 10) score += 1;
+				if (ex.getSets() > 3) score += 1;
+			}
+		}
+
+		return switch (score) {
+			case 0, 1, 2 -> "LIGHT";
+			case 3, 4, 5, 6, 7 -> "MODERATE";
+			default -> "INTENSE";
+		};
+	}
 }

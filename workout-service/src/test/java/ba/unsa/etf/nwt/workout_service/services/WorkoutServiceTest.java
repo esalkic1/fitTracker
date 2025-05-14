@@ -1,6 +1,7 @@
 package ba.unsa.etf.nwt.workout_service.services;
 
 import ba.unsa.etf.nwt.error_logging.model.ErrorType;
+import ba.unsa.etf.nwt.workout_service.clients.NutritionClient;
 import ba.unsa.etf.nwt.workout_service.domain.Exercise;
 import ba.unsa.etf.nwt.workout_service.domain.User;
 import ba.unsa.etf.nwt.workout_service.domain.Workout;
@@ -293,5 +294,96 @@ public class WorkoutServiceTest {
 
         verify(workoutRepository).findWorkoutsByUserIdAndDateBetween(userId, from, to);
         verifyNoMoreInteractions(modelMapper);
+    }
+
+    @Mock
+    private NutritionClient nutritionClient;
+
+    @Test
+    void createWorkoutWithExercises_WithIntenseWorkoutAndMeal_ShouldCreateWorkout() throws WorkoutServiceException, UserServiceException {
+        User user = new User();
+        user.setId(1L);
+
+        WorkoutDTO workoutDTO = new WorkoutDTO();
+        workoutDTO.setUserId(1L);
+        Instant workoutDate = Instant.now();
+        workoutDTO.setDate(workoutDate);
+
+        List<ExerciseDTO> exercises = Arrays.asList(
+                createExerciseDTO(50.0, 8, 3),
+                createExerciseDTO(60.0, 10, 3),
+                createExerciseDTO(70.0, 8, 3),
+                createExerciseDTO(80.0, 8, 3)
+        );
+
+        WorkoutWithExercisesDTO requestDTO = new WorkoutWithExercisesDTO();
+        requestDTO.setWorkout(workoutDTO);
+        requestDTO.setExercises(exercises);
+
+        Workout workout = new Workout();
+        workout.setId(1L);
+        workout.setDate(workoutDate);
+
+        when(nutritionClient.hasRecentMeal(1L, workoutDate)).thenReturn(true);
+
+        when(userService.getUserById(1L)).thenReturn(user);
+        when(modelMapper.map(workoutDTO, Workout.class)).thenReturn(workout);
+        when(workoutRepository.save(workout)).thenReturn(workout);
+        when(modelMapper.map(any(ExerciseDTO.class), eq(Exercise.class))).thenReturn(new Exercise());
+        when(exerciseRepository.save(any(Exercise.class))).thenReturn(new Exercise());
+        when(modelMapper.map(workout, WorkoutDTO.class)).thenReturn(workoutDTO);
+
+        WorkoutDTO result = workoutService.createWorkoutWithExercises(requestDTO);
+
+        assertNotNull(result);
+        verify(nutritionClient).hasRecentMeal(1L, workoutDate);
+        verify(userService).getUserById(1L);
+        verify(workoutRepository).save(workout);
+        verify(exerciseRepository, times(4)).save(any(Exercise.class));
+    }
+
+    @Test
+    void createWorkoutWithExercises_WithRegularWorkout_ShouldNotCheckNutrition() throws WorkoutServiceException, UserServiceException {
+        User user = new User();
+        user.setId(1L);
+
+        WorkoutDTO workoutDTO = new WorkoutDTO();
+        workoutDTO.setUserId(1L);
+
+        List<ExerciseDTO> exercises = Arrays.asList(
+                createExerciseDTO(30.0, 8, 2),
+                createExerciseDTO(40.0, 8, 2)
+        );
+
+        WorkoutWithExercisesDTO requestDTO = new WorkoutWithExercisesDTO();
+        requestDTO.setWorkout(workoutDTO);
+        requestDTO.setExercises(exercises);
+
+        Workout workout = new Workout();
+        workout.setId(1L);
+
+        when(userService.getUserById(1L)).thenReturn(user);
+        when(modelMapper.map(workoutDTO, Workout.class)).thenReturn(workout);
+        when(workoutRepository.save(workout)).thenReturn(workout);
+        when(modelMapper.map(any(ExerciseDTO.class), eq(Exercise.class))).thenReturn(new Exercise());
+        when(exerciseRepository.save(any(Exercise.class))).thenReturn(new Exercise());
+        when(modelMapper.map(workout, WorkoutDTO.class)).thenReturn(workoutDTO);
+
+        WorkoutDTO result = workoutService.createWorkoutWithExercises(requestDTO);
+
+        assertNotNull(result);
+        verify(userService).getUserById(1L);
+        verify(workoutRepository).save(workout);
+        verify(exerciseRepository, times(2)).save(any(Exercise.class));
+
+        verifyNoInteractions(nutritionClient);
+    }
+
+    private ExerciseDTO createExerciseDTO(Double weight, Integer reps, Integer sets) {
+        ExerciseDTO exerciseDTO = new ExerciseDTO();
+        exerciseDTO.setWeight(weight);
+        exerciseDTO.setReps(reps);
+        exerciseDTO.setSets(sets);
+        return exerciseDTO;
     }
 }

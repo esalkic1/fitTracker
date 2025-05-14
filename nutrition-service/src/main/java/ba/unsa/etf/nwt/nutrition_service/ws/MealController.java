@@ -1,15 +1,19 @@
 package ba.unsa.etf.nwt.nutrition_service.ws;
 
 import ba.unsa.etf.nwt.error_logging.model.ErrorResponse;
+import ba.unsa.etf.nwt.nutrition_service.domain.Meal;
 import ba.unsa.etf.nwt.nutrition_service.dto.MealDTO;
 import ba.unsa.etf.nwt.nutrition_service.dto.MealWithFoodDTO;
 import ba.unsa.etf.nwt.nutrition_service.exceptions.FoodServiceException;
 import ba.unsa.etf.nwt.nutrition_service.exceptions.MealServiceException;
 import ba.unsa.etf.nwt.nutrition_service.services.MealService;
 import ba.unsa.etf.nwt.nutrition_service.validators.MealValidator;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.Instant;
 
 @RestController
 @RequestMapping("api/v1/meal")
@@ -110,5 +114,20 @@ public class MealController {
                     .badRequest()
                     .body(ErrorResponse.from(e.getErrorType(), e.getMessage()));
         }
+    }
+
+    @GetMapping("/suggest")
+    public Meal suggestMealBasedOnWorkout(@RequestParam Long userId,
+                                          @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant date)
+            throws MealServiceException {
+        return mealService.suggestMealBasedOnWorkout(userId, date);
+    }
+
+    // Workout communication method
+    @GetMapping("/recent")
+    public boolean hasRecentMeal(
+            @RequestParam Long userId,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant workoutTime) {
+        return mealService.hasMealBeforeWorkout(userId, workoutTime);
     }
 }

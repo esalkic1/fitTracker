@@ -1,6 +1,7 @@
 package ba.unsa.etf.nwt.nutrition_service.services;
 
 import ba.unsa.etf.nwt.error_logging.model.ErrorType;
+import ba.unsa.etf.nwt.nutrition_service.clients.WorkoutClient;
 import ba.unsa.etf.nwt.nutrition_service.domain.Food;
 import ba.unsa.etf.nwt.nutrition_service.domain.Meal;
 import ba.unsa.etf.nwt.nutrition_service.domain.User;
@@ -20,12 +21,12 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.modelmapper.ModelMapper;
 
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -47,10 +48,14 @@ class MealServiceTest {
     @Mock
     private ModelMapper modelMapper;
 
+    @Mock
+    private WorkoutClient workoutClient;
+
     @InjectMocks
     private MealService mealService;
 
     private User user;
+    private Instant date;
     private Food food;
     private Meal meal;
     private MealDTO mealDTO;
@@ -61,6 +66,8 @@ class MealServiceTest {
     void setUp() {
         user = new User();
         user.setId(1L);
+
+        date = Instant.now();
 
         meal = new Meal();
         meal.setId(1L);
@@ -283,5 +290,128 @@ class MealServiceTest {
 
         assertEquals(0, result.size());
         verify(mealRepository, times(1)).findByNameContainingIgnoreCase(name);
+    }
+
+    @Test
+    void suggestMealBasedOnWorkout_LightIntensity_ReturnsLighterMeal() throws UserServiceException, MealServiceException {
+        when(workoutClient.getWorkoutIntensityLevel(anyLong(), anyString())).thenReturn("LIGHT");
+        when(userService.getUser(1L)).thenReturn(user);
+        when(foodRepository.findByName("Salad")).thenReturn(Optional.empty());
+        when(foodRepository.findByName("Chicken Breast")).thenReturn(Optional.empty());
+
+        Food salad = new Food("Salad", 150.0, null);
+        Food chicken = new Food("Chicken Breast", 200.0, null);
+        Meal expectedMeal = new Meal("Lighter Meal", user, List.of(salad, chicken), date);
+
+        when(foodRepository.save(any(Food.class))).thenReturn(salad).thenReturn(chicken);
+        when(mealRepository.save(any(Meal.class))).thenReturn(expectedMeal);
+
+        Meal result = mealService.suggestMealBasedOnWorkout(1L, date);
+
+        assertNotNull(result);
+        assertEquals("Lighter Meal", result.getName());
+        assertEquals(2, result.getFoods().size());
+        assertEquals("Salad", result.getFoods().get(0).getName());
+        assertEquals("Chicken Breast", result.getFoods().get(1).getName());
+        verify(mealRepository, times(1)).save(any(Meal.class));
+    }
+
+    @Test
+    void suggestMealBasedOnWorkout_ModerateIntensity_ReturnsModerateMeal() throws UserServiceException, MealServiceException {
+        when(workoutClient.getWorkoutIntensityLevel(anyLong(), anyString())).thenReturn("MODERATE");
+        when(userService.getUser(1L)).thenReturn(user);
+        when(foodRepository.findByName("Rice")).thenReturn(Optional.empty());
+        when(foodRepository.findByName("Tuna")).thenReturn(Optional.empty());
+
+        Food rice = new Food("Rice", 400.0, null);
+        Food tuna = new Food("Tuna", 300.0, null);
+        Meal expectedMeal = new Meal("Moderate Calorie Meal", user, List.of(rice, tuna), date);
+
+        when(foodRepository.save(any(Food.class))).thenReturn(rice).thenReturn(tuna);
+        when(mealRepository.save(any(Meal.class))).thenReturn(expectedMeal);
+
+        Meal result = mealService.suggestMealBasedOnWorkout(1L, date);
+
+        assertNotNull(result);
+        assertEquals("Moderate Calorie Meal", result.getName());
+        assertEquals(2, result.getFoods().size());
+        assertEquals("Rice", result.getFoods().get(0).getName());
+        assertEquals("Tuna", result.getFoods().get(1).getName());
+        verify(mealRepository, times(1)).save(any(Meal.class));
+    }
+
+    @Test
+    void suggestMealBasedOnWorkout_IntenseIntensity_ReturnsHigherCalorieMeal() throws UserServiceException, MealServiceException {
+        when(workoutClient.getWorkoutIntensityLevel(anyLong(), anyString())).thenReturn("INTENSE");
+        when(userService.getUser(1L)).thenReturn(user);
+        when(foodRepository.findByName("Pasta")).thenReturn(Optional.empty());
+        when(foodRepository.findByName("Beef Steak")).thenReturn(Optional.empty());
+
+        Food pasta = new Food("Pasta", 800.0, null);
+        Food beef = new Food("Beef Steak", 600.0, null);
+        Meal expectedMeal = new Meal("Higher Calorie Meal", user, List.of(pasta, beef), date);
+
+        when(foodRepository.save(any(Food.class))).thenReturn(pasta).thenReturn(beef);
+        when(mealRepository.save(any(Meal.class))).thenReturn(expectedMeal);
+
+        Meal result = mealService.suggestMealBasedOnWorkout(1L, date);
+
+        assertNotNull(result);
+        assertEquals("Higher Calorie Meal", result.getName());
+        assertEquals(2, result.getFoods().size());
+        assertEquals("Pasta", result.getFoods().get(0).getName());
+        assertEquals("Beef Steak", result.getFoods().get(1).getName());
+        verify(mealRepository, times(1)).save(any(Meal.class));
+    }
+
+    @Test
+    void suggestMealBasedOnWorkout_UnknownIntensity_ThrowsException() throws UserServiceException {
+        when(workoutClient.getWorkoutIntensityLevel(anyLong(), anyString())).thenReturn("INVALID");
+        when(userService.getUser(1L)).thenReturn(user);
+
+        MealServiceException exception = assertThrows(MealServiceException.class,
+                () -> mealService.suggestMealBasedOnWorkout(1L, date));
+
+        assertEquals("Failed to suggest meal: Unknown workout intensity level", exception.getMessage());
+        assertEquals(ErrorType.INTERNAL_ERROR, exception.getErrorType());
+        verify(mealRepository, never()).save(any(Meal.class));
+    }
+
+    @Test
+    void suggestMealBasedOnWorkout_UserNotFound_ThrowsException() throws UserServiceException {
+        when(workoutClient.getWorkoutIntensityLevel(anyLong(), anyString())).thenReturn("LIGHT");
+        when(userService.getUser(1L)).thenThrow(new UserServiceException("User with ID " + user.getId() + " not found", ErrorType.ENTITY_NOT_FOUND));
+
+        MealServiceException exception = assertThrows(MealServiceException.class,
+                () -> mealService.suggestMealBasedOnWorkout(1L, date));
+
+        assertEquals("Failed to suggest meal: User with ID " + user.getId() + " not found", exception.getMessage());
+        assertEquals(ErrorType.INTERNAL_ERROR, exception.getErrorType());
+        verify(mealRepository, never()).save(any(Meal.class));
+    }
+
+    @Test
+    void suggestMealBasedOnWorkout_ExistingFood_ReturnsMealWithExistingFood() throws UserServiceException, MealServiceException {
+        when(workoutClient.getWorkoutIntensityLevel(anyLong(), anyString())).thenReturn("LIGHT");
+        when(userService.getUser(1L)).thenReturn(user);
+
+        Food existingSalad = new Food("Salad", 150.0, null);
+        when(foodRepository.findByName("Salad")).thenReturn(Optional.of(existingSalad));
+        when(foodRepository.findByName("Chicken Breast")).thenReturn(Optional.empty());
+
+        Food chicken = new Food("Chicken Breast", 200.0, null);
+        Meal expectedMeal = new Meal("Lighter Meal", user, List.of(existingSalad, chicken), date);
+
+        when(foodRepository.save(any(Food.class))).thenReturn(chicken);
+        when(mealRepository.save(any(Meal.class))).thenReturn(expectedMeal);
+
+        Meal result = mealService.suggestMealBasedOnWorkout(1L, date);
+
+        assertNotNull(result);
+        assertEquals("Lighter Meal", result.getName());
+        assertEquals(2, result.getFoods().size());
+        assertEquals("Salad", result.getFoods().get(0).getName());
+        assertEquals("Chicken Breast", result.getFoods().get(1).getName());
+        verify(foodRepository, times(1)).save(any(Food.class));
     }
 }

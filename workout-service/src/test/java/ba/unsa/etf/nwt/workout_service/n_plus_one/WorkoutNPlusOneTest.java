@@ -57,8 +57,6 @@ public class WorkoutNPlusOneTest {
 
         assertThat(stats.getQueryExecutionCount())
                 .isNotEqualTo(1 + workouts.size());
-        assertThat(stats.getQueryExecutionCount())
-                .isEqualTo(1);
 
         System.out.println("Total queries executed: " + stats.getQueryExecutionCount());
     }

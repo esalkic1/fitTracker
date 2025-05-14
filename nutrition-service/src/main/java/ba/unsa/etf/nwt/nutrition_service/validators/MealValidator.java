@@ -8,6 +8,7 @@ import ba.unsa.etf.nwt.nutrition_service.exceptions.FoodServiceException;
 import ba.unsa.etf.nwt.nutrition_service.exceptions.MealServiceException;
 import org.springframework.stereotype.Component;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -32,6 +33,12 @@ public class MealValidator {
             errors.add("'userId' is required");
         } else if (mealDTO.getUserId() <= 0) {
             errors.add("'userId' must be a positive number");
+        }
+
+        if (mealDTO.getDate() == null) {
+            errors.add("'date' is required");
+        } else if (mealDTO.getDate().isAfter(Instant.now())) {
+            errors.add("'date' cannot be in the future");
         }
 
         throwError(errors, operation);

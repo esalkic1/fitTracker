@@ -9,6 +9,7 @@ import ba.unsa.etf.nwt.nutrition_service.repositories.UserRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.List;
 
@@ -49,9 +50,9 @@ public class DataSeeder implements CommandLineRunner {
 
         userRepository.saveAll(Arrays.asList(user1, user2));
 
-        Meal breakfast = new Meal("Breakfast", user1, null);
-        Meal lunch = new Meal("Lunch", user1, null);
-        Meal dinner = new Meal("Dinner", user2, null);
+        Meal breakfast = new Meal("Breakfast", user1, null, Instant.now());
+        Meal lunch = new Meal("Lunch", user1, null, Instant.now());
+        Meal dinner = new Meal("Dinner", user2, null, Instant.now());
 
         mealRepository.saveAll(Arrays.asList(breakfast, lunch, dinner));
 

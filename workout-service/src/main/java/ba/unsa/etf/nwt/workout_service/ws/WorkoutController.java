@@ -12,9 +12,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Instant;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("api/v1/workout")
@@ -112,5 +109,13 @@ public class WorkoutController {
 		} catch (Exception e) {
 			return ResponseEntity.badRequest().body("Invalid input: " + e.getMessage());
 		}
+	}
+
+	// Nutrition communication method
+	@GetMapping("/intensity-level")
+	public ResponseEntity<String> getWorkoutIntensityLevel(@RequestParam Long userId, @RequestParam String date) {
+		Instant parsedDate = Instant.parse(date);
+		String level = workoutService.getWorkoutIntensityLevel(userId, parsedDate);
+		return ResponseEntity.ok(level);
 	}
 }

@@ -1,6 +1,7 @@
 package ba.unsa.etf.nwt.nutrition_service.services;
 
 import ba.unsa.etf.nwt.error_logging.model.ErrorType;
+import ba.unsa.etf.nwt.nutrition_service.clients.WorkoutClient;
 import ba.unsa.etf.nwt.nutrition_service.domain.Food;
 import ba.unsa.etf.nwt.nutrition_service.domain.Meal;
 import ba.unsa.etf.nwt.nutrition_service.domain.User;
@@ -14,6 +15,8 @@ import jakarta.transaction.Transactional;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.List;
 
 @Service
@@ -22,12 +25,14 @@ public class MealService {
     private final UserService userService;
     private final ModelMapper modelMapper;
     private final FoodRepository foodRepository;
+    private final WorkoutClient workoutClient;
 
-    public MealService(MealRepository mealRepository, UserService userService, ModelMapper modelMapper, FoodRepository foodRepository) {
+    public MealService(MealRepository mealRepository, UserService userService, ModelMapper modelMapper, FoodRepository foodRepository, WorkoutClient workoutClient) {
         this.mealRepository = mealRepository;
         this.userService = userService;
         this.modelMapper = modelMapper;
         this.foodRepository = foodRepository;
+        this.workoutClient = workoutClient;
     }
 
     public List<Meal> getAllMeals() {
@@ -44,6 +49,7 @@ public class MealService {
             User user = userService.getUser(mealDTO.getUserId());
             Meal meal = modelMapper.map(mealDTO, Meal.class);
             meal.setUser(user);
+            meal.setDate(mealDTO.getDate());
 
             Meal savedMeal = mealRepository.save(meal);
             return modelMapper.map(savedMeal, MealDTO.class);
@@ -64,6 +70,10 @@ public class MealService {
             if (mealDTO.getUserId() != null) {
                 User user = userService.getUser(mealDTO.getUserId());
                 existingMeal.setUser(user);
+            }
+
+            if (mealDTO.getDate() != null) {
+                existingMeal.setDate(mealDTO.getDate());
             }
 
             Meal updatedMeal = mealRepository.save(existingMeal);
@@ -91,7 +101,6 @@ public class MealService {
         return mealRepository.findByNameContainingIgnoreCase(name.trim());
     }
 
-
     @Transactional
     public MealDTO createMealWithFoods(MealWithFoodDTO mealWithFoodDTO) throws MealServiceException {
         try {
@@ -99,6 +108,7 @@ public class MealService {
 
             Meal meal = modelMapper.map(mealWithFoodDTO.getMeal(), Meal.class);
             meal.setUser(user);
+            meal.setDate(mealWithFoodDTO.getMeal().getDate());
             Meal savedMeal = mealRepository.save(meal);
 
             for (FoodDTO foodDTO : mealWithFoodDTO.getFoods()) {
@@ -110,6 +120,67 @@ public class MealService {
             return modelMapper.map(savedMeal, MealDTO.class);
         } catch (Exception e) {
             throw new MealServiceException("Failed to create meal with foods: " + e.getMessage(), ErrorType.VALIDATION_FAILED);
+        }
+    }
+
+    public boolean hasMealBeforeWorkout(Long userId, Instant workoutTime) {
+        Instant threeHoursBefore = workoutTime.minus(Duration.ofHours(3));
+        return mealRepository.existsByUserIdAndDateBetween(userId, threeHoursBefore, workoutTime);
+    }
+
+    private Food findOrCreateFood(String name, Double calories) {
+        return foodRepository.findByName(name).orElseGet(() -> {
+            Food food = new Food(name, calories, null);
+            return foodRepository.save(food);
+        });
+    }
+
+    private Meal suggestLighterMeal(User user, Instant date) {
+        Food salad = findOrCreateFood("Salad", 150.0);
+        Food chickenBreast = findOrCreateFood("Chicken Breast", 200.0);
+
+        Meal meal = new Meal("Lighter Meal", user, List.of(salad, chickenBreast), date);
+        salad.setMeal(meal);
+        chickenBreast.setMeal(meal);
+
+        return mealRepository.save(meal);
+    }
+
+    private Meal suggestModerateMeal(User user, Instant date) {
+        Food rice = findOrCreateFood("Rice", 400.0);
+        Food tuna = findOrCreateFood("Tuna", 300.0);
+
+        Meal meal = new Meal("Moderate Calorie Meal", user, List.of(rice, tuna), date);
+        rice.setMeal(meal);
+        tuna.setMeal(meal);
+
+        return mealRepository.save(meal);
+    }
+
+    private Meal suggestHigherCalorieMeal(User user, Instant date) {
+        Food pasta = findOrCreateFood("Pasta", 800.0);
+        Food beef = findOrCreateFood("Beef Steak", 600.0);
+
+        Meal meal = new Meal("Higher Calorie Meal", user, List.of(pasta, beef), date);
+        pasta.setMeal(meal);
+        beef.setMeal(meal);
+
+        return mealRepository.save(meal);
+    }
+
+    public Meal suggestMealBasedOnWorkout(Long userId, Instant date) throws MealServiceException {
+        try {
+            String intensity = workoutClient.getWorkoutIntensityLevel(userId, date.toString());
+            User user = userService.getUser(userId);
+
+            return switch (intensity) {
+                case "LIGHT" -> suggestLighterMeal(user, date);
+                case "MODERATE" -> suggestModerateMeal(user, date);
+                case "INTENSE" -> suggestHigherCalorieMeal(user, date);
+                default -> throw new MealServiceException("Unknown workout intensity level", ErrorType.INTERNAL_ERROR);
+            };
+        } catch (Exception e) {
+            throw new MealServiceException("Failed to suggest meal: " + e.getMessage(), ErrorType.INTERNAL_ERROR);
         }
     }
 }
