@@ -5,3 +5,6 @@ spring:
     active: dev
   config:
     import: configserver:http://localhost:8888
+grpc:
+  server:
+    port: 7006

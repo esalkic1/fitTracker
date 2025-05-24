@@ -125,7 +125,7 @@ public class MealService {
 
     public boolean hasMealBeforeWorkout(Long userId, Instant workoutTime) {
         Instant threeHoursBefore = workoutTime.minus(Duration.ofHours(3));
-        return mealRepository.existsByUserIdAndDateBetween(userId, threeHoursBefore, workoutTime);
+        return !mealRepository.findByUserIdAndDateBetween(userId, threeHoursBefore, workoutTime).isEmpty();
     }
 
     private Food findOrCreateFood(String name, Double calories) {
@@ -182,5 +182,9 @@ public class MealService {
         } catch (Exception e) {
             throw new MealServiceException("Failed to suggest meal: " + e.getMessage(), ErrorType.INTERNAL_ERROR);
         }
+    }
+
+    public List<Meal> getByUserAndRange(final Long userId, final Instant from, final Instant to) {
+        return mealRepository.findByUserIdAndDateBetween(userId, from, to);
     }
 }

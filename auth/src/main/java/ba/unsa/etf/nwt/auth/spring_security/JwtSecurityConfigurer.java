@@ -22,6 +22,7 @@ public class JwtSecurityConfigurer implements SecurityConfigurer {
 				.authorizeHttpRequests(
 						requests -> requests
 								.requestMatchers("/api/v1/auth/**").permitAll()
+								.requestMatchers("/api/v1/user/{id}").permitAll()
 								.requestMatchers("/api/v1/**").authenticated()
 								.anyRequest().permitAll()
 				);

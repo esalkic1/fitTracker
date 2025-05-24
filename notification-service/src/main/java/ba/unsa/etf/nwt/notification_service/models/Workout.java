@@ -3,13 +3,13 @@ package ba.unsa.etf.nwt.notification_service.models;
 import java.util.UUID;
 
 public class Workout {
-	private UUID id;
+	private Long id;
 
-	public UUID getId() {
+	public Long getId() {
 		return id;
 	}
 
-	public void setId(UUID id) {
+	public void setId(Long id) {
 		this.id = id;
 	}
 }

@@ -6,22 +6,22 @@ import java.io.Serial;
 
 public class BaseServiceException extends Exception {
 
-  @Serial
-  private static final long serialVersionUID = -392982241246825333L;
+	@Serial
+	private static final long serialVersionUID = -392982241246825333L;
 
-  private final ErrorType errorType;
+	private final ErrorType errorType;
 
-  public BaseServiceException(String message, ErrorType errorType) {
-    super(message);
+	public BaseServiceException(String message, ErrorType errorType) {
+		super(message);
 
-    this.errorType = errorType;
-  }
+		this.errorType = errorType;
+	}
 
-  public BaseServiceException(String message) {
-    this(message, null);
-  }
+	public BaseServiceException(String message) {
+		this(message, null);
+	}
 
-  public ErrorType getErrorType() {
-    return errorType;
-  }
+	public ErrorType getErrorType() {
+		return errorType;
+	}
 }

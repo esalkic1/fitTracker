@@ -11,6 +11,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class UserService implements UserDetailsService {
@@ -20,11 +21,8 @@ public class UserService implements UserDetailsService {
 		this.userRepository = userRepository;
 	}
 
-	public User get(final Long id) throws UserServiceException {
-		return userRepository.findById(id)
-				.orElseThrow(() ->
-						new UserServiceException("Could not find user with id: " + id, ErrorType.ENTITY_NOT_FOUND)
-				);
+	public User get(final UUID handle) throws UserServiceException {
+		return userRepository.findByHandle(handle);
 	}
 
 	@Override

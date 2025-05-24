@@ -9,5 +9,5 @@ import java.util.List;
 public interface MealRepository extends JpaRepository<Meal, Long> {
     List<Meal> findByNameContainingIgnoreCase(String name);
     List<Meal> findByUserIdAndDate(Long userId, Instant date);
-    boolean existsByUserIdAndDateBetween(Long userId, Instant from, Instant to);
+    List<Meal> findByUserIdAndDateBetween(Long userId, Instant from, Instant to);
 }
