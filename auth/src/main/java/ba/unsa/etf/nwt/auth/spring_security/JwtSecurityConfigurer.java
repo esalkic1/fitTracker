@@ -21,7 +21,8 @@ public class JwtSecurityConfigurer implements SecurityConfigurer {
 				.addFilterBefore(this.filter, UsernamePasswordAuthenticationFilter.class)
 				.authorizeHttpRequests(
 						requests -> requests
-								.requestMatchers("/api/v1/auth/**").permitAll()
+								.requestMatchers("/api/v1/auth/register").permitAll()
+								.requestMatchers("/api/v1/auth/login").permitAll()
 								.requestMatchers("/api/v1/user/{id}").permitAll()
 								.requestMatchers("/api/v1/**").authenticated()
 								.anyRequest().permitAll()

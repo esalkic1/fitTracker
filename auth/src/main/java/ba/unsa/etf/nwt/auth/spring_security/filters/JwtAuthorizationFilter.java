@@ -18,7 +18,8 @@ import java.util.Set;
 
 public class JwtAuthorizationFilter extends OncePerRequestFilter {
 	private static final Set<String> ALLOWED_PATHS = Set.of(
-			"/api/v1/auth"
+			"/api/v1/auth/login",
+			"/api/v1/auth/register"
 	);
 
 	private final JwtService jwtService;

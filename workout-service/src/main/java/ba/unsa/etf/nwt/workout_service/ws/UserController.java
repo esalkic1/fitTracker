@@ -14,6 +14,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("api/v1/user")
 public class UserController {
+    // TODO: This controller should be removed.
     private final UserService userService;
 
     public UserController(final UserService userService) {
