@@ -2,6 +2,7 @@ package ba.unsa.etf.nwt.auth.services;
 
 import ba.unsa.etf.nwt.auth.domain.Role;
 import ba.unsa.etf.nwt.auth.domain.User;
+import ba.unsa.etf.nwt.auth.dto.UserCreatedEvent;
 import ba.unsa.etf.nwt.auth.exceptions.JwtException;
 import ba.unsa.etf.nwt.auth.exceptions.UserServiceException;
 import ba.unsa.etf.nwt.auth.repositories.UserRepository;
@@ -22,17 +23,20 @@ public class AuthService {
 	private final JwtService jwtService;
 	private final PasswordEncoder passwordEncoder;
 	private final AuthenticationManager authenticationManager;
+	private final UserEventPublisher userEventPublisher;
 
 	public AuthService(
 			final UserRepository userRepository,
 			final JwtService jwtService,
 			final PasswordEncoder passwordEncoder,
-			final AuthenticationManager authenticationManager
+			final AuthenticationManager authenticationManager,
+			final UserEventPublisher userEventPublisher
 	) {
 		this.userRepository = userRepository;
 		this.jwtService = jwtService;
 		this.passwordEncoder = passwordEncoder;
 		this.authenticationManager = authenticationManager;
+		this.userEventPublisher = userEventPublisher;
 	}
 
 
@@ -46,8 +50,8 @@ public class AuthService {
 
 			user.setRole(Role.USER); // for now...
 			user.setPassword(passwordEncoder.encode(user.getPassword()));
-
 			final User newUser = userRepository.save(user);
+			userEventPublisher.publishUserCreatedEvent(new UserCreatedEvent(newUser.getHandle(), newUser.getEmail()));
 
 			final String generatedToken = jwtService.generateToken(user);
 
