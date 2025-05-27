@@ -23,6 +23,9 @@ public class RabbitMQConfig {
     public static final String NOTIFICATION_USER_CREATED_QUEUE = "notification.user.created.queue";
     public static final String USER_CREATED_ROUTING_KEY = "user.created";
 
+    public static final String USER_CREATION_FAILED_QUEUE = "auth.user.creation.failed.queue";
+    public static final String USER_CREATION_FAILED_ROUTING_KEY = "user.creation.failed";
+
     @Bean
     public TopicExchange userExchange() {
         return new TopicExchange(USER_EXCHANGE);
@@ -71,18 +74,18 @@ public class RabbitMQConfig {
                 .with(USER_CREATED_ROUTING_KEY);
     }
 
-//    @Bean
-//    public Jackson2JsonMessageConverter messageConverter() {
-//        return new Jackson2JsonMessageConverter();
-//    }
-//
-//    @Bean
-//    public RabbitTemplate rabbitTemplate(ConnectionFactory connectionFactory,
-//                                         Jackson2JsonMessageConverter messageConverter) {
-//        RabbitTemplate rabbitTemplate = new RabbitTemplate(connectionFactory);
-//        rabbitTemplate.setMessageConverter(messageConverter);
-//        return rabbitTemplate;
-//    }
+    @Bean
+    public Queue userCreationFailedQueue() {
+        return new Queue(USER_CREATION_FAILED_QUEUE);
+    }
+
+    @Bean
+    public Binding userCreationFailedBinding() {
+        return BindingBuilder
+                .bind(userCreationFailedQueue())
+                .to(userExchange())
+                .with(USER_CREATION_FAILED_ROUTING_KEY);
+    }
 
     @Bean
     public Jackson2JsonMessageConverter messageConverter() {
@@ -97,6 +100,8 @@ public class RabbitMQConfig {
         Map<String, Class<?>> idClassMapping = new HashMap<>();
         idClassMapping.put("ba.unsa.etf.nwt.auth.dto.UserCreatedEvent",
                 ba.unsa.etf.nwt.auth.dto.UserCreatedEvent.class);
+        idClassMapping.put("ba.unsa.etf.nwt.auth.dto.UserCreationFailedEvent",
+                ba.unsa.etf.nwt.auth.dto.UserCreationFailedEvent.class);
         classMapper.setIdClassMapping(idClassMapping);
         return classMapper;
     }

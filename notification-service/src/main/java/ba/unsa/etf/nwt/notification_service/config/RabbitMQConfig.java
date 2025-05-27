@@ -46,6 +46,8 @@ public class RabbitMQConfig {
         Map<String, Class<?>> idClassMapping = new HashMap<>();
         idClassMapping.put("ba.unsa.etf.nwt.auth.dto.UserCreatedEvent",
                 ba.unsa.etf.nwt.notification_service.dto.UserCreatedEvent.class);
+        idClassMapping.put("ba.unsa.etf.nwt.auth.dto.UserCreationFailedEvent",
+                ba.unsa.etf.nwt.notification_service.dto.UserCreationFailedEvent.class);
         classMapper.setIdClassMapping(idClassMapping);
         return classMapper;
     }

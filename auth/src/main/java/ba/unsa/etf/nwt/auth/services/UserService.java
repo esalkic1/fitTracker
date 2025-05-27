@@ -11,6 +11,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -43,4 +44,10 @@ public class UserService implements UserDetailsService {
 				.authorities(List.of(new SimpleGrantedAuthority(user.getRole().name())))
 				.build();
 	}
+
+	public void delete(UUID handle) {
+		User user = userRepository.findByHandle(handle);
+		userRepository.deleteById(user.getId());
+	}
+
 }
