@@ -18,6 +18,14 @@ public class RouteLocatorConfig {
 						.path("/api/v1/workout/**")
 						.filters(f -> f.filter(authFilterFactory.apply()))
 						.uri("lb://workout-service")
+				).route("nutrition-service", route -> route
+						.path("/api/v1/nutrition/**")
+						.filters(f -> f.filter(authFilterFactory.apply()))
+						.uri("lb://nutrition-service")
+				).route("notification-service", route -> route
+						.path("/api/v1/notification/**")
+						.filters(f -> f.filter(authFilterFactory.apply()))
+						.uri("lb://notification-service")
 				)
 				.build();
 	}
