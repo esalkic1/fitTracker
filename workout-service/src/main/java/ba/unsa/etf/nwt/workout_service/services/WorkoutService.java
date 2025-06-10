@@ -51,14 +51,14 @@ public class WorkoutService {
 
 	public WorkoutDTO createWorkout(WorkoutDTO workoutDTO) throws WorkoutServiceException {
 		try {
-			User user = userService.getUserById(workoutDTO.getUserId());
+			User user = userService.getUserByUuid(workoutDTO.getUserHandle());
 
 			Workout workout = modelMapper.map(workoutDTO, Workout.class);
 			workout.setUser(user);
 
 			Workout savedWorkout = workoutRepository.save(workout);
 			WorkoutDTO result = modelMapper.map(savedWorkout, WorkoutDTO.class);
-			result.setUserId(user.getId());
+			result.setUserHandle(user.getUuid());
 
 			return result;
 		} catch (Exception e) {
@@ -71,7 +71,7 @@ public class WorkoutService {
 				.orElseThrow(() -> new WorkoutServiceException("Could not find workout with id: " + workoutId, ErrorType.ENTITY_NOT_FOUND));
 
 		try {
-			User user = userService.getUserById(workoutDTO.getUserId());
+			User user = userService.getUserByUuid(workoutDTO.getUserHandle());
 
 			modelMapper.map(workoutDTO, existingWorkout);
 			existingWorkout.setId(workoutId);
@@ -79,7 +79,7 @@ public class WorkoutService {
 
 			Workout updatedWorkout = workoutRepository.save(existingWorkout);
 			WorkoutDTO result = modelMapper.map(updatedWorkout, WorkoutDTO.class);
-			result.setUserId(user.getId());
+			result.setUserHandle(user.getUuid());
 
 			return result;
 		} catch (Exception e) {
@@ -96,12 +96,15 @@ public class WorkoutService {
 	@Transactional
 	public WorkoutDTO createWorkoutWithExercises(WorkoutWithExercisesDTO request) throws WorkoutServiceException {
 		try {
-			User user = userService.getUserById(request.getWorkout().getUserId());
+			User user = userService.getUserByUuid(request.getWorkout().getUserHandle());
 			Workout workout = modelMapper.map(request.getWorkout(), Workout.class);
 
 			// Nutrition communication
 			if (isWorkoutIntense(request.getExercises())) {
-				boolean hasMeal = nutritionClient.hasRecentMeal(request.getWorkout().getUserId(), workout.getDate());
+				boolean hasMeal = nutritionClient.hasRecentMeal(
+						request.getWorkout().getUserHandle(),
+						workout.getDate()
+				);
 				if (!hasMeal) {
 					throw new WorkoutServiceException("User must log a meal before intense workouts", ErrorType.VALIDATION_FAILED);
 				}

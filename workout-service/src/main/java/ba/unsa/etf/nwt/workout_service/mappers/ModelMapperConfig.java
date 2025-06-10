@@ -18,7 +18,7 @@ public class ModelMapperConfig {
         modelMapper.addMappings(new PropertyMap<Workout, WorkoutDTO>() {
             @Override
             protected void configure() {
-                map().setUserId(source.getUser().getId());
+                map().setUserHandle(source.getUser().getUuid());
             }
         });
 

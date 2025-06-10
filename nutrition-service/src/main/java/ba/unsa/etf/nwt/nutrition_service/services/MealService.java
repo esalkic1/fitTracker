@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class MealService {
@@ -123,9 +124,9 @@ public class MealService {
         }
     }
 
-    public boolean hasMealBeforeWorkout(Long userId, Instant workoutTime) {
+    public boolean hasMealBeforeWorkout(UUID userUuid, Instant workoutTime) {
         Instant threeHoursBefore = workoutTime.minus(Duration.ofHours(3));
-        return !mealRepository.findByUserIdAndDateBetween(userId, threeHoursBefore, workoutTime).isEmpty();
+        return !mealRepository.findByUserUuidAndDateBetween(userUuid, threeHoursBefore, workoutTime).isEmpty();
     }
 
     private Food findOrCreateFood(String name, Double calories) {
