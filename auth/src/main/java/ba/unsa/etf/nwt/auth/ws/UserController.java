@@ -4,10 +4,7 @@ import ba.unsa.etf.nwt.auth.exceptions.UserServiceException;
 import ba.unsa.etf.nwt.auth.services.UserService;
 import ba.unsa.etf.nwt.error_logging.model.ErrorResponse;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
 
@@ -24,4 +21,10 @@ public class UserController {
 	public ResponseEntity<?> getUser(@PathVariable final UUID handle) throws UserServiceException {
 		return ResponseEntity.ok(userService.get(handle));
 	}
+
+	@DeleteMapping("{handle}")
+	public ResponseEntity<?> deleteUser(@PathVariable final UUID handle) throws UserServiceException{
+        userService.delete(handle);
+        return ResponseEntity.noContent().build();
+    }
 }

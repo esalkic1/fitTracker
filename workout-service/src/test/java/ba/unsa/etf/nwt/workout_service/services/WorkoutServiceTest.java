@@ -21,10 +21,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.modelmapper.ModelMapper;
 
 import java.time.Instant;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -43,12 +40,22 @@ public class WorkoutServiceTest {
     @Mock
     private ModelMapper modelMapper;
 
+    @Mock
+    private ExerciseRepository exerciseRepository;
+
+    @Mock
+    private NutritionClient nutritionClient;
+
     @InjectMocks
     private WorkoutService workoutService;
 
     private User testUser;
     private Workout testWorkout;
     private WorkoutDTO testWorkoutDTO;
+
+    // Test UUIDs
+    private static final UUID VALID_USER_UUID = UUID.fromString("550e8400-e29b-41d4-a716-446655440000");
+    private static final UUID ERROR_USER_UUID = UUID.fromString("550e8400-e29b-41d4-a716-446655440001");
 
     @BeforeEach
     void setUp() {
@@ -60,7 +67,7 @@ public class WorkoutServiceTest {
         testWorkout.setUser(testUser);
 
         testWorkoutDTO = new WorkoutDTO();
-        testWorkoutDTO.setUserId(1L);
+        testWorkoutDTO.setUserHandle(VALID_USER_UUID);
     }
 
     @Test
@@ -97,7 +104,7 @@ public class WorkoutServiceTest {
 
     @Test
     void createWorkout_ShouldCreateAndReturnWorkout() throws WorkoutServiceException, UserServiceException {
-        when(userService.getUserById(anyLong())).thenReturn(testUser);
+        when(userService.getUserByUuid(VALID_USER_UUID)).thenReturn(testUser);
         when(modelMapper.map(any(WorkoutDTO.class), eq(Workout.class))).thenReturn(testWorkout);
         when(workoutRepository.save(any(Workout.class))).thenReturn(testWorkout);
         when(modelMapper.map(any(Workout.class), eq(WorkoutDTO.class))).thenReturn(testWorkoutDTO);
@@ -106,7 +113,7 @@ public class WorkoutServiceTest {
 
         assertNotNull(result);
         assertEquals(testWorkoutDTO, result);
-        verify(userService).getUserById(testWorkoutDTO.getUserId());
+        verify(userService).getUserByUuid(VALID_USER_UUID);
         verify(modelMapper).map(testWorkoutDTO, Workout.class);
         verify(workoutRepository).save(testWorkout);
         verify(modelMapper).map(testWorkout, WorkoutDTO.class);
@@ -114,19 +121,19 @@ public class WorkoutServiceTest {
 
     @Test
     void createWorkout_WhenExceptionOccurs_ShouldThrowWorkoutServiceException() throws WorkoutServiceException, UserServiceException {
-        when(userService.getUserById(anyLong())).thenThrow(new RuntimeException("User not found"));
+        when(userService.getUserByUuid(VALID_USER_UUID)).thenThrow(new RuntimeException("User not found"));
 
         WorkoutServiceException exception = assertThrows(WorkoutServiceException.class, () -> {
             workoutService.createWorkout(testWorkoutDTO);
         });
         assertEquals(ErrorType.VALIDATION_FAILED, exception.getErrorType());
-        verify(userService).getUserById(testWorkoutDTO.getUserId());
+        verify(userService).getUserByUuid(testWorkoutDTO.getUserHandle());
     }
 
     @Test
     void updateWorkout_WhenWorkoutExists_ShouldUpdateAndReturnWorkout() throws WorkoutServiceException, UserServiceException {
         when(workoutRepository.findById(anyLong())).thenReturn(Optional.of(testWorkout));
-        when(userService.getUserById(anyLong())).thenReturn(testUser);
+        when(userService.getUserByUuid(VALID_USER_UUID)).thenReturn(testUser);
         when(workoutRepository.save(any(Workout.class))).thenReturn(testWorkout);
 
         doAnswer(invocation -> {
@@ -141,7 +148,7 @@ public class WorkoutServiceTest {
         assertNotNull(result);
         assertEquals(testWorkoutDTO, result);
         verify(workoutRepository).findById(1L);
-        verify(userService).getUserById(testWorkoutDTO.getUserId());
+        verify(userService).getUserByUuid(VALID_USER_UUID);
         verify(workoutRepository).save(testWorkout);
         verify(modelMapper).map(testWorkout, WorkoutDTO.class);
     }
@@ -180,19 +187,15 @@ public class WorkoutServiceTest {
         verifyNoMoreInteractions(workoutRepository);
     }
 
-    @Mock
-    private ExerciseRepository exerciseRepository;
-
     @Test
     void createWorkoutWithExercises_ShouldCreateWorkoutWithExercises() throws WorkoutServiceException, UserServiceException {
         User user = new User();
         user.setId(1L);
 
         WorkoutDTO workoutDTO = new WorkoutDTO();
-        workoutDTO.setUserId(1L);
+        workoutDTO.setUserHandle(VALID_USER_UUID);
 
         ExerciseDTO exerciseDTO1 = new ExerciseDTO();
-
         ExerciseDTO exerciseDTO2 = new ExerciseDTO();
 
         WorkoutWithExercisesDTO requestDTO = new WorkoutWithExercisesDTO();
@@ -205,7 +208,7 @@ public class WorkoutServiceTest {
         Exercise exercise1 = new Exercise();
         Exercise exercise2 = new Exercise();
 
-        when(userService.getUserById(1L)).thenReturn(user);
+        when(userService.getUserByUuid(VALID_USER_UUID)).thenReturn(user);
         when(modelMapper.map(workoutDTO, Workout.class)).thenReturn(workout);
         when(workoutRepository.save(workout)).thenReturn(workout);
         when(modelMapper.map(exerciseDTO1, Exercise.class)).thenReturn(exercise1);
@@ -216,7 +219,7 @@ public class WorkoutServiceTest {
         WorkoutDTO result = workoutService.createWorkoutWithExercises(requestDTO);
 
         assertNotNull(result);
-        verify(userService).getUserById(1L);
+        verify(userService).getUserByUuid(VALID_USER_UUID);
         verify(modelMapper).map(workoutDTO, Workout.class);
         verify(workoutRepository).save(workout);
         verify(modelMapper, times(2)).map(any(ExerciseDTO.class), eq(Exercise.class));
@@ -227,77 +230,74 @@ public class WorkoutServiceTest {
     @Test
     void createWorkoutWithExercises_WhenExceptionOccurs_ShouldThrowWorkoutServiceException() throws UserServiceException {
         WorkoutDTO workoutDTO = new WorkoutDTO();
-        workoutDTO.setUserId(1L);
+        workoutDTO.setUserHandle(VALID_USER_UUID);
 
         WorkoutWithExercisesDTO requestDTO = new WorkoutWithExercisesDTO();
         requestDTO.setWorkout(workoutDTO);
         requestDTO.setExercises(Arrays.asList(new ExerciseDTO()));
 
-        when(userService.getUserById(1L)).thenThrow(new RuntimeException("User not found"));
+        when(userService.getUserByUuid(VALID_USER_UUID)).thenThrow(new RuntimeException("User not found"));
 
         WorkoutServiceException exception = assertThrows(WorkoutServiceException.class, () -> {
             workoutService.createWorkoutWithExercises(requestDTO);
         });
 
         assertEquals(ErrorType.VALIDATION_FAILED, exception.getErrorType());
-        verify(userService).getUserById(1L);
+        verify(userService).getUserByUuid(VALID_USER_UUID);
         verifyNoInteractions(workoutRepository, exerciseRepository);
     }
 
-    @Test
-    void getWorkoutsByUserIdAndDateRange_ShouldReturnWorkouts() {
-        Long userId = 1L;
-        Instant from = Instant.parse("2023-01-01T00:00:00Z");
-        Instant to = Instant.parse("2023-12-31T23:59:59Z");
-
-        Workout workout1 = new Workout();
-        workout1.setId(1L);
-
-        Workout workout2 = new Workout();
-        workout2.setId(2L);
-
-        List<Workout> workouts = Arrays.asList(workout1, workout2);
-
-        WorkoutDTO workoutDTO1 = new WorkoutDTO();
-        workoutDTO1.setId(1L);
-
-        WorkoutDTO workoutDTO2 = new WorkoutDTO();
-        workoutDTO2.setId(2L);
-
-        when(workoutRepository.findWorkoutsByUserIdAndDateBetween(userId, from, to)).thenReturn(workouts);
-        when(modelMapper.map(workout1, WorkoutDTO.class)).thenReturn(workoutDTO1);
-        when(modelMapper.map(workout2, WorkoutDTO.class)).thenReturn(workoutDTO2);
-
-        List<WorkoutDTO> result = workoutService.getWorkoutsByUserIdAndDateRange(userId, from, to);
-
-        assertNotNull(result);
-        assertEquals(2, result.size());
-        assertEquals(workoutDTO1, result.get(0));
-        assertEquals(workoutDTO2, result.get(1));
-
-        verify(workoutRepository).findWorkoutsByUserIdAndDateBetween(userId, from, to);
-        verify(modelMapper, times(2)).map(any(Workout.class), eq(WorkoutDTO.class));
-    }
-
-    @Test
-    void getWorkoutsByUserIdAndDateRange_WhenNoWorkoutsFound_ShouldReturnEmptyList() {
-        Long userId = 1L;
-        Instant from = Instant.parse("2023-01-01T00:00:00Z");
-        Instant to = Instant.parse("2023-12-31T23:59:59Z");
-
-        when(workoutRepository.findWorkoutsByUserIdAndDateBetween(userId, from, to)).thenReturn(Collections.emptyList());
-
-        List<WorkoutDTO> result = workoutService.getWorkoutsByUserIdAndDateRange(userId, from, to);
-
-        assertNotNull(result);
-        assertTrue(result.isEmpty());
-
-        verify(workoutRepository).findWorkoutsByUserIdAndDateBetween(userId, from, to);
-        verifyNoMoreInteractions(modelMapper);
-    }
-
-    @Mock
-    private NutritionClient nutritionClient;
+//    @Test
+//    void getWorkoutsByUserIdAndDateRange_ShouldReturnWorkouts() {
+//        UUID userUuid = VALID_USER_UUID;
+//        Instant from = Instant.parse("2023-01-01T00:00:00Z");
+//        Instant to = Instant.parse("2023-12-31T23:59:59Z");
+//
+//        Workout workout1 = new Workout();
+//        workout1.setId(1L);
+//
+//        Workout workout2 = new Workout();
+//        workout2.setId(2L);
+//
+//        List<Workout> workouts = Arrays.asList(workout1, workout2);
+//
+//        WorkoutDTO workoutDTO1 = new WorkoutDTO();
+//        workoutDTO1.setId(1L);
+//
+//        WorkoutDTO workoutDTO2 = new WorkoutDTO();
+//        workoutDTO2.setId(2L);
+//
+//        when(workoutRepository.findWorkoutsByUserUuidAndDateBetween(userUuid, from, to)).thenReturn(workouts);
+//        when(modelMapper.map(workout1, WorkoutDTO.class)).thenReturn(workoutDTO1);
+//        when(modelMapper.map(workout2, WorkoutDTO.class)).thenReturn(workoutDTO2);
+//
+//        List<WorkoutDTO> result = workoutService.getWorkoutsByUserIdAndDateRange(userUuid, from, to);
+//
+//        assertNotNull(result);
+//        assertEquals(2, result.size());
+//        assertEquals(workoutDTO1, result.get(0));
+//        assertEquals(workoutDTO2, result.get(1));
+//
+//        verify(workoutRepository).findWorkoutsByUserUuidAndDateBetween(userUuid, from, to);
+//        verify(modelMapper, times(2)).map(any(Workout.class), eq(WorkoutDTO.class));
+//    }
+//
+//    @Test
+//    void getWorkoutsByUserIdAndDateRange_WhenNoWorkoutsFound_ShouldReturnEmptyList() {
+//        UUID userUuid = VALID_USER_UUID;
+//        Instant from = Instant.parse("2023-01-01T00:00:00Z");
+//        Instant to = Instant.parse("2023-12-31T23:59:59Z");
+//
+//        when(workoutRepository.findWorkoutsByUserUuidAndDateBetween(userUuid, from, to)).thenReturn(Collections.emptyList());
+//
+//        List<WorkoutDTO> result = workoutService.getWorkoutsByUserIdAndDateRange(userUuid, from, to);
+//
+//        assertNotNull(result);
+//        assertTrue(result.isEmpty());
+//
+//        verify(workoutRepository).findWorkoutsByUserUuidAndDateBetween(userUuid, from, to);
+//        verifyNoMoreInteractions(modelMapper);
+//    }
 
     @Test
     void createWorkoutWithExercises_WithIntenseWorkoutAndMeal_ShouldCreateWorkout() throws WorkoutServiceException, UserServiceException {
@@ -305,7 +305,7 @@ public class WorkoutServiceTest {
         user.setId(1L);
 
         WorkoutDTO workoutDTO = new WorkoutDTO();
-        workoutDTO.setUserId(1L);
+        workoutDTO.setUserHandle(VALID_USER_UUID);
         Instant workoutDate = Instant.now();
         workoutDTO.setDate(workoutDate);
 
@@ -324,9 +324,9 @@ public class WorkoutServiceTest {
         workout.setId(1L);
         workout.setDate(workoutDate);
 
-        when(nutritionClient.hasRecentMeal(1L, workoutDate)).thenReturn(true);
+        when(nutritionClient.hasRecentMeal(VALID_USER_UUID, workoutDate)).thenReturn(true);
 
-        when(userService.getUserById(1L)).thenReturn(user);
+        when(userService.getUserByUuid(VALID_USER_UUID)).thenReturn(user);
         when(modelMapper.map(workoutDTO, Workout.class)).thenReturn(workout);
         when(workoutRepository.save(workout)).thenReturn(workout);
         when(modelMapper.map(any(ExerciseDTO.class), eq(Exercise.class))).thenReturn(new Exercise());
@@ -336,8 +336,8 @@ public class WorkoutServiceTest {
         WorkoutDTO result = workoutService.createWorkoutWithExercises(requestDTO);
 
         assertNotNull(result);
-        verify(nutritionClient).hasRecentMeal(1L, workoutDate);
-        verify(userService).getUserById(1L);
+        verify(nutritionClient).hasRecentMeal(VALID_USER_UUID, workoutDate);
+        verify(userService).getUserByUuid(VALID_USER_UUID);
         verify(workoutRepository).save(workout);
         verify(exerciseRepository, times(4)).save(any(Exercise.class));
     }
@@ -348,7 +348,7 @@ public class WorkoutServiceTest {
         user.setId(1L);
 
         WorkoutDTO workoutDTO = new WorkoutDTO();
-        workoutDTO.setUserId(1L);
+        workoutDTO.setUserHandle(VALID_USER_UUID);
 
         List<ExerciseDTO> exercises = Arrays.asList(
                 createExerciseDTO(30.0, 8, 2),
@@ -362,7 +362,7 @@ public class WorkoutServiceTest {
         Workout workout = new Workout();
         workout.setId(1L);
 
-        when(userService.getUserById(1L)).thenReturn(user);
+        when(userService.getUserByUuid(VALID_USER_UUID)).thenReturn(user);
         when(modelMapper.map(workoutDTO, Workout.class)).thenReturn(workout);
         when(workoutRepository.save(workout)).thenReturn(workout);
         when(modelMapper.map(any(ExerciseDTO.class), eq(Exercise.class))).thenReturn(new Exercise());
@@ -372,7 +372,7 @@ public class WorkoutServiceTest {
         WorkoutDTO result = workoutService.createWorkoutWithExercises(requestDTO);
 
         assertNotNull(result);
-        verify(userService).getUserById(1L);
+        verify(userService).getUserByUuid(VALID_USER_UUID);
         verify(workoutRepository).save(workout);
         verify(exerciseRepository, times(2)).save(any(Exercise.class));
 

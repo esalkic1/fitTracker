@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("api/v1/meal")
@@ -135,9 +136,9 @@ public class MealController {
     // Workout communication method
     @GetMapping("/recent")
     public boolean hasRecentMeal(
-            @RequestParam Long userId,
+            @RequestParam UUID userUuid,
             @RequestParam @IsoDateTime Instant workoutTime) {
-        return mealService.hasMealBeforeWorkout(userId, workoutTime);
+        return mealService.hasMealBeforeWorkout(userUuid, workoutTime);
     }
 
     @GetMapping("/by-user-and-date")

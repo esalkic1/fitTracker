@@ -6,6 +6,7 @@ import jakarta.validation.constraints.PastOrPresent;
 import jakarta.validation.constraints.Positive;
 
 import java.time.Instant;
+import java.util.UUID;
 
 public class WorkoutDTO {
     private Long id;
@@ -14,9 +15,8 @@ public class WorkoutDTO {
     @PastOrPresent(message = "Workout date cannot be in the future")
     private Instant date;
 
-    @NotNull(message = "User ID is required")
-    @Positive(message = "User ID must be a positive number")
-    private Long userId;
+    @NotNull(message = "User handle is required")
+    private UUID userHandle;
 
     public Long getId() {
         return id;
@@ -34,11 +34,11 @@ public class WorkoutDTO {
         this.date = date;
     }
 
-    public Long getUserId() {
-        return userId;
+    public UUID getUserHandle() {
+        return userHandle;
     }
 
-    public void setUserId(Long userId) {
-        this.userId = userId;
+    public void setUserHandle(UUID userHandle) {
+        this.userHandle = userHandle;
     }
 }
