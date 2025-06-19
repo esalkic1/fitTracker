@@ -1,6 +1,7 @@
 package ba.unsa.etf.nwt.auth.services;
 
 import ba.unsa.etf.nwt.auth.domain.User;
+import ba.unsa.etf.nwt.auth.dto.UserUpdateRequest;
 import ba.unsa.etf.nwt.auth.exceptions.UserServiceException;
 import ba.unsa.etf.nwt.auth.repositories.UserRepository;
 import ba.unsa.etf.nwt.error_logging.model.ErrorType;
@@ -50,4 +51,20 @@ public class UserService implements UserDetailsService {
 		userRepository.deleteById(user.getId());
 	}
 
+	public List<User> getAllUsers() {
+		return userRepository.findAll();
+	}
+
+	public User updateUser(final UUID handle, final UserUpdateRequest request) throws UserServiceException {
+		User existingUser = userRepository.findByHandle(handle);
+
+		if (request.getEmail() != null && !request.getEmail().isEmpty()) {
+			existingUser.setEmail(request.getEmail());
+		}
+		if (request.getRole() != null) {
+			existingUser.setRole(request.getRole());
+		}
+
+		return userRepository.save(existingUser); // Save the updated user
+	}
 }

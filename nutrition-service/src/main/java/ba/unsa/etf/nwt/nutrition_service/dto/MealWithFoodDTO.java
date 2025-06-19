@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 import java.util.List;
+import java.util.UUID;
 
 @Data
 public class MealWithFoodDTO {
@@ -15,4 +16,7 @@ public class MealWithFoodDTO {
     @NotNull(message = "Food list is required")
     @Valid
     private List<FoodDTO> foods;
+
+    @NotNull(message = "User handle is required")
+    private UUID userHandle;
 }

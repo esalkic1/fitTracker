@@ -8,7 +8,9 @@ import ba.unsa.etf.nwt.nutrition_service.domain.User;
 import ba.unsa.etf.nwt.nutrition_service.dto.FoodDTO;
 import ba.unsa.etf.nwt.nutrition_service.dto.MealDTO;
 import ba.unsa.etf.nwt.nutrition_service.dto.MealWithFoodDTO;
+import ba.unsa.etf.nwt.nutrition_service.exceptions.FoodServiceException;
 import ba.unsa.etf.nwt.nutrition_service.exceptions.MealServiceException;
+import ba.unsa.etf.nwt.nutrition_service.exceptions.UserServiceException;
 import ba.unsa.etf.nwt.nutrition_service.repositories.FoodRepository;
 import ba.unsa.etf.nwt.nutrition_service.repositories.MealRepository;
 import jakarta.transaction.Transactional;
@@ -40,6 +42,12 @@ public class MealService {
         return mealRepository.findAll();
     }
 
+    public List<Meal> getAllMealsByUser(final String uuid) throws UserServiceException {
+        User user = userService.getUserByUuid(UUID.fromString(uuid));
+
+        return mealRepository.findByUserId(user.getId());
+    }
+
     public Meal getMeal(Long id) throws MealServiceException {
         return mealRepository.findById(id)
                 .orElseThrow(() -> new MealServiceException("Meal with ID " + id + " not found", ErrorType.ENTITY_NOT_FOUND));
@@ -57,6 +65,28 @@ public class MealService {
         } catch (Exception e) {
             throw new MealServiceException("Failed to create meal: " + e.getMessage(), ErrorType.VALIDATION_FAILED);
         }
+    }
+
+    @Transactional
+    public Meal createFullMeal(MealWithFoodDTO mealWithFoodDTO) throws MealServiceException, FoodServiceException, UserServiceException {
+        Meal meal = new Meal();
+        meal.setName(mealWithFoodDTO.getMeal().getName());
+        meal.setDate(mealWithFoodDTO.getMeal().getDate());
+
+        User user = userService.getUserByUuid(mealWithFoodDTO.getUserHandle());
+        meal.setUser(user);
+
+        Meal savedMeal = mealRepository.save(meal);
+
+        for (FoodDTO foodDTO : mealWithFoodDTO.getFoods()) {
+            Food food = new Food();
+            food.setName(foodDTO.getName());
+            food.setCalories(foodDTO.getCalories());
+            food.setMeal(savedMeal);
+            foodRepository.save(food);
+        }
+
+        return savedMeal;
     }
 
     public MealDTO updateMeal(Long id, MealDTO mealDTO) throws MealServiceException {
@@ -87,10 +117,47 @@ public class MealService {
         }
     }
 
+    @Transactional
+    public Meal updateFullMeal(final Long id, final MealWithFoodDTO dto) throws MealServiceException, UserServiceException {
+        Meal meal = mealRepository.findById(id)
+                .orElseThrow(() -> new MealServiceException("Meal with ID " + id + " not found", ErrorType.ENTITY_NOT_FOUND));
+
+        meal.setName(dto.getMeal().getName());
+        meal.setDate(dto.getMeal().getDate());
+
+        User user = userService.getUserByUuid(dto.getUserHandle());
+        meal.setUser(user);
+
+        meal.getFoods().clear();
+
+        foodRepository.deleteByMealId(id);
+
+        List<Food> foods = dto.getFoods().stream().map(foodDTO -> {
+            Food food = new Food();
+            food.setName(foodDTO.getName());
+            food.setCalories(foodDTO.getCalories());
+            food.setMeal(meal);
+            return food;
+        }).toList();
+
+        meal.getFoods().addAll(foods);
+
+        return mealRepository.save(meal);
+    }
+
     public void deleteMeal(Long id) throws MealServiceException {
         Meal meal = mealRepository.findById(id)
                 .orElseThrow(() -> new MealServiceException("Meal with ID " + id + " not found", ErrorType.ENTITY_NOT_FOUND));
 
+        mealRepository.delete(meal);
+    }
+
+    @Transactional
+    public void deleteFullMeal(final Long mealId) throws MealServiceException {
+        Meal meal = mealRepository.findById(mealId)
+                .orElseThrow(() -> new MealServiceException("Meal with ID " + mealId + " not found", ErrorType.ENTITY_NOT_FOUND));
+
+        foodRepository.deleteAll(meal.getFoods());
         mealRepository.delete(meal);
     }
 

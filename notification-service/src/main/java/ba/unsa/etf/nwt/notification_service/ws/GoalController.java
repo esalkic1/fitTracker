@@ -1,20 +1,15 @@
 package ba.unsa.etf.nwt.notification_service.ws;
 
+import ba.unsa.etf.nwt.error_logging.model.ErrorResponse;
 import ba.unsa.etf.nwt.notification_service.domain.GoalEntity;
 import ba.unsa.etf.nwt.notification_service.domain.GoalFrequency;
 import ba.unsa.etf.nwt.notification_service.domain.GoalType;
 import ba.unsa.etf.nwt.notification_service.domain.User;
 import ba.unsa.etf.nwt.notification_service.exceptions.GoalException;
 import ba.unsa.etf.nwt.notification_service.services.GoalService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
 
@@ -28,8 +23,17 @@ public class GoalController {
 	}
 
 	@GetMapping
-	public ResponseEntity<?> findAll(@RequestParam(name = "user_handle") final UUID userHandle) {
-		return ResponseEntity.ok(goalService.findAllByUser(userHandle));
+	public ResponseEntity<?> findAllByUser(@RequestParam(name = "user_handle", required = false) final UUID userHandle) {
+		if (userHandle == null || userHandle.toString().trim().isEmpty()) {
+			return ResponseEntity.ok(goalService.findAll());
+		} else {
+			return ResponseEntity.ok(goalService.findAllByUser(userHandle));
+		}
+	}
+
+	@GetMapping("{id}")
+	public ResponseEntity<?> findById(@PathVariable Long id) {
+		return ResponseEntity.ok(goalService.findById(id));
 	}
 
 	@PostMapping

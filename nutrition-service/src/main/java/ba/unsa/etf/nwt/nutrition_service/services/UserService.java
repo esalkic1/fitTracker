@@ -7,6 +7,7 @@ import ba.unsa.etf.nwt.nutrition_service.repositories.UserRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class UserService {
@@ -23,6 +24,16 @@ public class UserService {
     public User getUser(Long id) throws UserServiceException {
         return userRepository.findById(id)
                 .orElseThrow(() -> new UserServiceException("User with ID " + id + " not found", ErrorType.ENTITY_NOT_FOUND));
+    }
+
+    public User getUserById(Long id) throws UserServiceException {
+        return userRepository.findById(id)
+                .orElseThrow(() -> new UserServiceException("Could not find user with id: " + id, ErrorType.ENTITY_NOT_FOUND));
+    }
+
+    public User getUserByUuid(UUID uuid) throws UserServiceException {
+        return userRepository.findByUuid(uuid)
+                .orElseThrow(() -> new UserServiceException("Could not find user with uuid: " + uuid, ErrorType.ENTITY_NOT_FOUND));
     }
 
     public User createUser(User user) throws UserServiceException {

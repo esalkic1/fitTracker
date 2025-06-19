@@ -10,4 +10,5 @@ public interface FoodRepository extends JpaRepository<Food, Long> {
     List<Food> findByCaloriesBetween(int minCalories, int maxCalories);
     List<Food> findByNameContainingIgnoreCase(String name);
     Optional<Food> findByName(String name);
+    void deleteByMealId(Long id);
 }

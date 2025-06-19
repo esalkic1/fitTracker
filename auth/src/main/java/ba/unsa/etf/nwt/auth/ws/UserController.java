@@ -1,5 +1,7 @@
 package ba.unsa.etf.nwt.auth.ws;
 
+import ba.unsa.etf.nwt.auth.domain.User;
+import ba.unsa.etf.nwt.auth.dto.UserUpdateRequest;
 import ba.unsa.etf.nwt.auth.exceptions.UserServiceException;
 import ba.unsa.etf.nwt.auth.services.UserService;
 import ba.unsa.etf.nwt.error_logging.model.ErrorResponse;
@@ -27,4 +29,17 @@ public class UserController {
         userService.delete(handle);
         return ResponseEntity.noContent().build();
     }
+
+	@GetMapping("")
+	public ResponseEntity<?> getAllUsers() throws UserServiceException {
+		return ResponseEntity.ok(userService.getAllUsers());
+	}
+
+	@PutMapping("{handle}")
+	public ResponseEntity<?> updateUser(
+			@PathVariable final UUID handle,
+			@RequestBody final UserUpdateRequest request) throws UserServiceException {
+		User updatedUser = userService.updateUser(handle, request);
+		return ResponseEntity.ok(updatedUser);
+	}
 }

@@ -18,7 +18,7 @@ public class ExerciseTemplate {
     @Column(unique = true, nullable = false, updatable = false)
     private UUID uuid;
 
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name = "exercise_details_id", nullable = false)
     private ExerciseDetails exerciseDetails;
 

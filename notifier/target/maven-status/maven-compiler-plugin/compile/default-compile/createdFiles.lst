@@ -1,0 +1,12 @@
+ba\unsa\etf\nwt\common\notifier\email\EmailProperties.class
+ba\unsa\etf\nwt\common\notifier\mock\MockNotifierConfiguration.class
+ba\unsa\etf\nwt\common\notifier\email\EmailProperties$EmailAuth.class
+ba\unsa\etf\nwt\common\notifier\api\Notifier.class
+ba\unsa\etf\nwt\common\notifier\api\Notification.class
+ba\unsa\etf\nwt\common\notifier\api\Recipient.class
+ba\unsa\etf\nwt\common\notifier\email\EmailProperties$Sender.class
+ba\unsa\etf\nwt\common\notifier\email\EmailNotifierConfiguration$UsernamePasswordEmailAuthenticator.class
+ba\unsa\etf\nwt\common\notifier\email\EmailNotifierConfiguration.class
+ba\unsa\etf\nwt\common\notifier\NotifierAutoConfiguration.class
+ba\unsa\etf\nwt\common\notifier\mock\MockNotifier.class
+ba\unsa\etf\nwt\common\notifier\email\EmailNotifier.class

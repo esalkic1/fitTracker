@@ -8,6 +8,7 @@ import ba.unsa.etf.nwt.workout_service.domain.Workout;
 import ba.unsa.etf.nwt.workout_service.dto.ExerciseDTO;
 import ba.unsa.etf.nwt.workout_service.dto.WorkoutDTO;
 import ba.unsa.etf.nwt.workout_service.dto.WorkoutWithExercisesDTO;
+import ba.unsa.etf.nwt.workout_service.exceptions.UserServiceException;
 import ba.unsa.etf.nwt.workout_service.exceptions.WorkoutServiceException;
 import ba.unsa.etf.nwt.workout_service.repositories.ExerciseRepository;
 import ba.unsa.etf.nwt.workout_service.repositories.WorkoutRepository;
@@ -22,6 +23,7 @@ import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class WorkoutService {
@@ -187,4 +189,13 @@ public class WorkoutService {
 			default -> "INTENSE";
 		};
 	}
+
+	public List<Workout> getWorkoutsByUserUuid(String uuid) throws WorkoutServiceException, UserServiceException {
+		User user = userService.getUserByUuid(UUID.fromString(uuid));
+
+		List<Workout> workouts = workoutRepository.findWorkoutsByUserId(user.getId());
+
+		return workouts;
+	}
+
 }

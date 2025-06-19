@@ -1,28 +1,34 @@
 package ba.unsa.etf.nwt.workout_service.services;
 
 import ba.unsa.etf.nwt.error_logging.model.ErrorType;
-import ba.unsa.etf.nwt.workout_service.domain.User;
-import ba.unsa.etf.nwt.workout_service.domain.WorkoutTemplate;
-import ba.unsa.etf.nwt.workout_service.dto.WorkoutTemplateDTO;
+import ba.unsa.etf.nwt.workout_service.domain.*;
+import ba.unsa.etf.nwt.workout_service.dto.*;
+import ba.unsa.etf.nwt.workout_service.exceptions.WorkoutServiceException;
 import ba.unsa.etf.nwt.workout_service.exceptions.WorkoutTemplateServiceException;
+import ba.unsa.etf.nwt.workout_service.repositories.ExerciseRepository;
+import ba.unsa.etf.nwt.workout_service.repositories.ExerciseTemplateRepository;
 import ba.unsa.etf.nwt.workout_service.repositories.WorkoutTemplateRepository;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class WorkoutTemplateService {
     private final WorkoutTemplateRepository workoutTemplateRepository;
     private final UserService userService;
     private final ModelMapper modelMapper;
+    private final ExerciseTemplateRepository exerciseTemplateRepository;
 
     public WorkoutTemplateService(final WorkoutTemplateRepository workoutTemplateRepository,
                                   final UserService userService,
-                                  final ModelMapper modelMapper) {
+                                  final ModelMapper modelMapper,
+                                  final ExerciseTemplateRepository exerciseTemplateRepository) {
         this.workoutTemplateRepository = workoutTemplateRepository;
         this.userService = userService;
         this.modelMapper = modelMapper;
+        this.exerciseTemplateRepository = exerciseTemplateRepository;
     }
 
     public List<WorkoutTemplate> getAllWorkoutTemplates() {
@@ -67,7 +73,8 @@ public class WorkoutTemplateService {
                         ErrorType.ENTITY_NOT_FOUND));
 
         try {
-            User user = userService.getUserById(workoutTemplateDTO.getUserId());
+            workoutTemplateDTO.setUserId(existingTemplate.getUser().getId());
+            User user = userService.getUserById(existingTemplate.getUser().getId());
             modelMapper.map(workoutTemplateDTO, existingTemplate);
             existingTemplate.setId(workoutTemplateId);
             existingTemplate.setUser(user);
@@ -88,4 +95,35 @@ public class WorkoutTemplateService {
 
         workoutTemplateRepository.delete(workoutTemplate);
     }
+
+    public List<WorkoutTemplate> getWorkoutTemplatesByUserUuid(String uuid) throws WorkoutTemplateServiceException {
+        try {
+            User user = userService.getUserByUuid(UUID.fromString(uuid));
+            return workoutTemplateRepository.findByUser(user);
+        } catch (Exception e) {
+            throw new WorkoutTemplateServiceException("Failed to get workout templates by user UUID: " + e.getMessage(), ErrorType.VALIDATION_FAILED);
+        }
+    }
+
+    public WorkoutTemplateWithUserUuidDTO createWorkoutTemplateWithExerciseTemplates(WorkoutTemplateWithExerciseTemplatesDTO request) throws WorkoutTemplateServiceException {
+        try {
+            User user = userService.getUserByUuid(request.getWorkoutTemplate().getUserHandle());
+            WorkoutTemplate workoutTemplate = modelMapper.map(request.getWorkoutTemplate(), WorkoutTemplate.class);
+
+            workoutTemplate.setUser(user);
+            WorkoutTemplate savedWorkoutTemplate = workoutTemplateRepository.save(workoutTemplate);
+
+            for (ExerciseTemplateDTO dto : request.getExerciseTemplates()) {
+                ExerciseTemplate exerciseTemplate = modelMapper.map(dto, ExerciseTemplate.class);
+                exerciseTemplate.setWorkoutTemplate(savedWorkoutTemplate);
+                exerciseTemplateRepository.save(exerciseTemplate);
+            }
+
+            return modelMapper.map(savedWorkoutTemplate, WorkoutTemplateWithUserUuidDTO.class);
+
+        } catch (Exception e) {
+            throw new WorkoutTemplateServiceException("Failed to create workout template with exercise templates: " + e.getMessage(), ErrorType.VALIDATION_FAILED);
+        }
+    }
+
 }

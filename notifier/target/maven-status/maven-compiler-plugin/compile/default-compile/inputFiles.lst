@@ -1,0 +1,9 @@
+C:\Users\Korisnik\NWT\notifier\src\main\java\ba\unsa\etf\nwt\common\notifier\api\Notification.java
+C:\Users\Korisnik\NWT\notifier\src\main\java\ba\unsa\etf\nwt\common\notifier\api\Notifier.java
+C:\Users\Korisnik\NWT\notifier\src\main\java\ba\unsa\etf\nwt\common\notifier\api\Recipient.java
+C:\Users\Korisnik\NWT\notifier\src\main\java\ba\unsa\etf\nwt\common\notifier\email\EmailNotifier.java
+C:\Users\Korisnik\NWT\notifier\src\main\java\ba\unsa\etf\nwt\common\notifier\email\EmailNotifierConfiguration.java
+C:\Users\Korisnik\NWT\notifier\src\main\java\ba\unsa\etf\nwt\common\notifier\email\EmailProperties.java
+C:\Users\Korisnik\NWT\notifier\src\main\java\ba\unsa\etf\nwt\common\notifier\mock\MockNotifier.java
+C:\Users\Korisnik\NWT\notifier\src\main\java\ba\unsa\etf\nwt\common\notifier\mock\MockNotifierConfiguration.java
+C:\Users\Korisnik\NWT\notifier\src\main\java\ba\unsa\etf\nwt\common\notifier\NotifierAutoConfiguration.java

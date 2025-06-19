@@ -10,8 +10,8 @@ public class ExerciseTemplateDTO {
     @Positive(message = "Exercise Details ID must be a positive number")
     private Long exerciseDetailsId;
 
-    @NotNull(message = "Workout Template ID is required")
-    @Positive(message = "Workout Template ID must be a positive number")
+    //@NotNull(message = "Workout Template ID is required")
+    //@Positive(message = "Workout Template ID must be a positive number")
     private Long workoutTemplateId;
 
     public long getId() {

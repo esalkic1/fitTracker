@@ -1,0 +1,71 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 240 10% 3.9%;
+    --card-foreground: 0 0% 98%;
+    --popover: 240 10% 3.9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 195 100% 50%;
+    --primary-foreground: 240 10% 3.9%;
+    --secondary: 240 3.7% 15.9%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 240 3.7% 15.9%;
+    --muted-foreground: 240 5% 64.9%;
+    --accent: 142 100% 50%;
+    --accent-foreground: 240 10% 3.9%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 3.7% 15.9%;
+    --input: 240 3.7% 15.9%;
+    --ring: 195 100% 50%;
+    --radius: 0.75rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+@layer components {
+  .fitness-gradient {
+    background: linear-gradient(135deg, #0a0e1a 0%, #1a1d29 50%, #2a2d3a 100%);
+  }
+
+  .fitness-card {
+    @apply bg-gradient-to-br from-slate-800/50 to-slate-900/50 border-slate-700/50 backdrop-blur-sm;
+  }
+
+  .fitness-button-primary {
+    @apply bg-gradient-to-r from-fitness-electric to-fitness-success hover:from-fitness-electric/80 hover:to-fitness-success/80 text-fitness-dark font-semibold transition-all duration-300 hover:shadow-lg hover:shadow-fitness-electric/25;
+  }
+
+  .fitness-button-energy {
+    @apply bg-gradient-to-r from-fitness-energy to-red-500 hover:from-fitness-energy/80 hover:to-red-500/80 text-white font-semibold transition-all duration-300 hover:shadow-lg hover:shadow-fitness-energy/25;
+  }
+
+  .fitness-progress-bar {
+    @apply bg-gradient-to-r from-fitness-electric via-fitness-success to-fitness-energy;
+  }
+
+  .fitness-glow {
+    @apply shadow-lg shadow-fitness-electric/20 border border-fitness-electric/30;
+  }
+
+  .fitness-text-gradient {
+    background: linear-gradient(135deg, #00d4ff 0%, #00ff88 50%, #ff6b35 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+}

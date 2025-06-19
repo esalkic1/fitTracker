@@ -3,6 +3,7 @@ package ba.unsa.etf.nwt.workout_service.ws;
 import ba.unsa.etf.nwt.error_logging.model.ErrorResponse;
 import ba.unsa.etf.nwt.workout_service.dto.WorkoutDTO;
 import ba.unsa.etf.nwt.workout_service.dto.WorkoutWithExercisesDTO;
+import ba.unsa.etf.nwt.workout_service.exceptions.UserServiceException;
 import ba.unsa.etf.nwt.workout_service.exceptions.WorkoutServiceException;
 import ba.unsa.etf.nwt.workout_service.services.WorkoutService;
 import jakarta.validation.Valid;
@@ -118,4 +119,16 @@ public class WorkoutController {
 		String level = workoutService.getWorkoutIntensityLevel(userId, parsedDate);
 		return ResponseEntity.ok(level);
 	}
+
+	@GetMapping("/by-user-uuid/{uuid}")
+	public ResponseEntity<?> getWorkoutsByUserUuid(@PathVariable final String uuid) {
+		try {
+			return ResponseEntity.ok(workoutService.getWorkoutsByUserUuid(uuid));
+		} catch (WorkoutServiceException | UserServiceException e) {
+			return ResponseEntity.badRequest().body(
+					ErrorResponse.from(e.getErrorType(), e.getMessage())
+			);
+		}
+    }
+
 }

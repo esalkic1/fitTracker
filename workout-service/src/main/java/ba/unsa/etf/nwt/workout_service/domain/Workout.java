@@ -22,6 +22,8 @@ public class Workout {
 	@Column(unique = true, nullable = false, updatable = false)
 	private UUID uuid;
 
+	private String name;
+
 	private Instant date;
 
 	@ManyToOne
@@ -34,7 +36,8 @@ public class Workout {
 
 	public Workout() {}
 
-	public Workout(Instant date, User user, List<Exercise> exercises) {
+	public Workout(String name, Instant date, User user, List<Exercise> exercises) {
+		this.name = name;
 		this.date = date;
 		this.user = user;
 		this.exercises = exercises;
@@ -78,6 +81,14 @@ public class Workout {
 
 	public void setExercises(List<Exercise> exercises) {
 		this.exercises = exercises;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
 	}
 }
 

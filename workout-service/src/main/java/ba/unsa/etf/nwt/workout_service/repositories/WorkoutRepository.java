@@ -16,4 +16,5 @@ public interface WorkoutRepository extends JpaRepository<Workout, Long> {
             @Param("from") Instant from,
             @Param("to") Instant to
     );
+    List<Workout> findWorkoutsByUserId(Long userId);
 }

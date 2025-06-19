@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.UUID;
 
 public interface MealRepository extends JpaRepository<Meal, Long> {
+    List<Meal> findByUserId(Long userId);
     List<Meal> findByNameContainingIgnoreCase(String name);
     List<Meal> findByUserIdAndDate(Long userId, Instant date);
     List<Meal> findByUserUuidAndDateBetween(UUID userUuid, Instant from, Instant to);

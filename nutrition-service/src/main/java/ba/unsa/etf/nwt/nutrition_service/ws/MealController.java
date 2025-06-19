@@ -6,9 +6,11 @@ import ba.unsa.etf.nwt.nutrition_service.dto.MealDTO;
 import ba.unsa.etf.nwt.nutrition_service.dto.MealWithFoodDTO;
 import ba.unsa.etf.nwt.nutrition_service.exceptions.FoodServiceException;
 import ba.unsa.etf.nwt.nutrition_service.exceptions.MealServiceException;
+import ba.unsa.etf.nwt.nutrition_service.exceptions.UserServiceException;
 import ba.unsa.etf.nwt.nutrition_service.services.MealService;
 import ba.unsa.etf.nwt.nutrition_service.validators.MealValidator;
 import ba.unsa.etf.nwt.nutrition_service.ws.annotations.IsoDateTime;
+import jakarta.transaction.Transactional;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -37,8 +39,18 @@ public class MealController {
     }
 
     @GetMapping("")
-    public ResponseEntity<?> getAllMeals() {
-        return ResponseEntity.ok(mealService.getAllMeals());
+    public ResponseEntity<?> getAllMeals(@RequestParam(name = "uuid", required = false) final String uuid) {
+        try {
+            if (uuid == null || uuid.trim().isEmpty()) {
+                return ResponseEntity.ok(mealService.getAllMeals());
+            } else {
+                return ResponseEntity.ok(mealService.getAllMealsByUser(uuid));
+            }
+        } catch (UserServiceException e) {
+        return ResponseEntity
+                .badRequest()
+                .body(ErrorResponse.from(e.getErrorType(), e.getMessage()));
+        }
     }
 
     @GetMapping("{id}")
@@ -81,6 +93,20 @@ public class MealController {
         }
     }
 
+    @PostMapping("/full")
+    public ResponseEntity<?> createFullMeal(@RequestBody final MealWithFoodDTO mealWithFoodDTO) {
+        try {
+            return ResponseEntity
+                    .status(HttpStatus.CREATED)
+                    .body(mealService.createFullMeal(mealWithFoodDTO));
+        } catch (MealServiceException | FoodServiceException | UserServiceException e) {
+            return ResponseEntity
+                    .badRequest()
+                    .body(ErrorResponse.from(e.getErrorType(), e.getMessage()));
+        }
+    }
+
+
     @PostMapping("/with-food")
     public ResponseEntity<?> createMealWithFoods(@RequestBody MealWithFoodDTO mealWithFoodDTO) {
         try {
@@ -112,10 +138,40 @@ public class MealController {
         }
     }
 
+    @PutMapping("/full/{id}")
+    public ResponseEntity<?> updateFullMeal(
+            @PathVariable final Long id,
+            @RequestBody final MealWithFoodDTO mealWithFoodDTO
+    ) {
+        try {
+            return ResponseEntity
+                    .status(HttpStatus.OK)
+                    .body(mealService.updateFullMeal(id, mealWithFoodDTO));
+        } catch (MealServiceException | UserServiceException e) {
+            return ResponseEntity
+                    .badRequest()
+                    .body(ErrorResponse.from(e.getErrorType(), e.getMessage()));
+        }
+    }
+
     @DeleteMapping("{id}")
     public ResponseEntity<?> deleteMeal(@PathVariable Long id) {
         try {
             mealService.deleteMeal(id);
+            return ResponseEntity
+                    .noContent()
+                    .build();
+        } catch (MealServiceException e) {
+            return ResponseEntity
+                    .badRequest()
+                    .body(ErrorResponse.from(e.getErrorType(), e.getMessage()));
+        }
+    }
+
+    @DeleteMapping("/full/{id}")
+    public ResponseEntity<?> deleteFullMeal(@PathVariable final String id) {
+        try {
+            mealService.deleteFullMeal(Long.valueOf(id));
             return ResponseEntity
                     .noContent()
                     .build();

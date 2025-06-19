@@ -1,0 +1,5 @@
+ba\unsa\etf\nwt\error_logging\model\ErrorResponse.class
+ba\unsa\etf\nwt\error_logging\error_advice\BaseErrorAdvice.class
+ba\unsa\etf\nwt\error_logging\config\ErrorHandlingAutoConfiguration.class
+ba\unsa\etf\nwt\error_logging\exceptions\BaseServiceException.class
+ba\unsa\etf\nwt\error_logging\model\ErrorType.class

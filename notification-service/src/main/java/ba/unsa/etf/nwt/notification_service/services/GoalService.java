@@ -29,8 +29,16 @@ public class GoalService {
 		this.authServiceClient = authServiceClient;
 	}
 
+	public List<GoalEntity> findAll() {
+		return goalRepository.findAll();
+	}
+
 	public List<GoalEntity> findAllByUser(final UUID userHandle) {
 		return goalRepository.findAllByUser_Handle(userHandle);
+	}
+
+	public Optional<GoalEntity> findById(final Long id) {
+		return goalRepository.findById(id);
 	}
 
 	public GoalEntity save(final GoalEntity goalEntity) {

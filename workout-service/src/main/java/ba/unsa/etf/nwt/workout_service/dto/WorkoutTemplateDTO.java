@@ -16,8 +16,8 @@ public class WorkoutTemplateDTO {
     @Size(max = 500, message = "Description cannot exceed 500 characters")
     private String description;
 
-    @NotNull(message = "User ID is required")
-    @Positive(message = "User ID must be a positive number")
+    //@NotNull(message = "User ID is required")
+    //@Positive(message = "User ID must be a positive number")
     private Long userId;
 
     public Long getId() {

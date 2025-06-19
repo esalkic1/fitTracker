@@ -3,6 +3,9 @@ package ba.unsa.etf.nwt.workout_service.ws;
 import ba.unsa.etf.nwt.error_logging.model.ErrorResponse;
 import ba.unsa.etf.nwt.workout_service.domain.WorkoutTemplate;
 import ba.unsa.etf.nwt.workout_service.dto.WorkoutTemplateDTO;
+import ba.unsa.etf.nwt.workout_service.dto.WorkoutTemplateWithExerciseTemplatesDTO;
+import ba.unsa.etf.nwt.workout_service.dto.WorkoutWithExercisesDTO;
+import ba.unsa.etf.nwt.workout_service.exceptions.WorkoutServiceException;
 import ba.unsa.etf.nwt.workout_service.exceptions.WorkoutTemplateServiceException;
 import ba.unsa.etf.nwt.workout_service.services.WorkoutTemplateService;
 import jakarta.validation.Valid;
@@ -82,4 +85,28 @@ public class WorkoutTemplateController {
             );
         }
     }
+
+    @GetMapping("user/uuid/{uuid}")
+    public ResponseEntity<?> getWorkoutTemplatesByUserUuid(@PathVariable final String uuid) {
+        try {
+            return ResponseEntity.ok(workoutTemplateService.getWorkoutTemplatesByUserUuid(uuid));
+        } catch (WorkoutTemplateServiceException e) {
+            return ResponseEntity.badRequest().body(
+                    ErrorResponse.from(e.getErrorType(), e.getMessage())
+            );
+        }
+    }
+
+    @PostMapping("/with-exercises")
+    public ResponseEntity<?> createWorkoutTemplateWithExercisesTemplates(@Valid @RequestBody final WorkoutTemplateWithExerciseTemplatesDTO request) {
+        try {
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(workoutTemplateService.createWorkoutTemplateWithExerciseTemplates(request));
+        } catch (WorkoutTemplateServiceException e) {
+            return ResponseEntity.badRequest().body(
+                    ErrorResponse.from(e.getErrorType(), e.getMessage())
+            );
+        }
+    }
+
 }

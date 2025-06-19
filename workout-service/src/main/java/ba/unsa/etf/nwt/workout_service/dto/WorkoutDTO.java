@@ -11,6 +11,8 @@ import java.util.UUID;
 public class WorkoutDTO {
     private Long id;
 
+    private String name;
+
     @NotNull(message = "Date is required")
     @PastOrPresent(message = "Workout date cannot be in the future")
     private Instant date;
@@ -40,5 +42,13 @@ public class WorkoutDTO {
 
     public void setUserHandle(UUID userHandle) {
         this.userHandle = userHandle;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 }

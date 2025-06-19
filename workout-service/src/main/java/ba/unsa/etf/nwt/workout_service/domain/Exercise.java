@@ -22,7 +22,7 @@ public class Exercise {
     private int reps;
     private int sets;
 
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name = "exercise_details_id", nullable = false)
     private ExerciseDetails exerciseDetails;
 
