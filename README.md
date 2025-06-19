@@ -24,3 +24,6 @@ started in a specific order.
 
 After all of the above the services should be started. To confirm they started correctly 
 go to Eureka registry (`http://localhost:8761/`) and confirm that there are 4 registered services.
+
+Demo aplikacije i urađenih zadataka nalazi se na [sljedećem linku](https://drive.google.com/drive/folders/1JNBdTgggExFMfduXcrpLc0UFXzsZQH7y?usp=drive_link).
+
