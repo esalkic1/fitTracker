@@ -27,6 +27,11 @@ public class RouteLocatorConfig {
 						.filters(f -> f.filter(authFilterFactory.apply()))
 						.uri("lb://notification-service")
 				)
+				.route("auth", route -> route
+						.path("/api/v1/auth/**")
+						.filters(f -> f.filter(authFilterFactory.apply()))
+						.uri("lb://auth")
+				)
 				.build();
 	}
 }

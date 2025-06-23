@@ -1,0 +1,168 @@
+
+services:
+  auth-service:
+    build:
+      context: .
+      dockerfile: Dockerfile-auth
+    container_name: auth-service
+    working_dir: /app
+    ports:
+      - "9000:9000"
+    environment:
+      JWT_SECRET_KEY: f1a9233adf8281a952cd569dee364c52e49e0e9b900c9ed014d6b872414fe72fdcc9ee6a70ffd6cbd2255aa8fdf80263e04d3d3437839dbe04cddb2b24a0cdd6dbc8741911fdbe665b40243b3855f310adb69eff9a9f7b608680c70c6ff97f1c8f324bf95e8cabe993e69ad672c50b4e498168582e7829a11c14cd27b3c3c745
+      CONFIG_SERVER_URL: http://config-server:8888
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/nwt_auth
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: ""
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+    depends_on:
+      - config-server
+      - system-events
+      - eureka-server
+      - postgres
+      - rabbitmq
+    restart: always
+
+  workout-service:
+    build:
+      context: .
+      dockerfile: Dockerfile-workout
+    container_name: workout-service
+    working_dir: /app
+    ports:
+      - "9030:9030"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/nwt_workout
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+    depends_on:
+      - config-server
+      - system-events
+      - eureka-server
+      - postgres
+      - rabbitmq
+    restart: always
+
+  nutrition-service:
+    build:
+      context: .
+      dockerfile: Dockerfile-nutrition
+    container_name: nutrition-service
+    working_dir: /app
+    ports:
+      - "9020:9020"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/nwt_nutrition
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+    depends_on:
+      - config-server
+      - system-events
+      - eureka-server
+      - postgres
+      - rabbitmq
+    restart: always
+
+  notifications-service:
+    build:
+      context: .
+      dockerfile: Dockerfile-notifications
+    container_name: notifications-service
+    working_dir: /app
+    ports:
+      - "9040:9040"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/nwt_notification
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+    depends_on:
+      - config-server
+      - system-events
+      - eureka-server
+      - postgres
+      - rabbitmq
+    restart: always
+
+  gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile-gateway
+    container_name: gateway
+    working_dir: /app
+    ports:
+      - "8000:8000"
+    environment:
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+    depends_on:
+      - config-server
+      - system-events
+      - eureka-server
+      - postgres
+      - rabbitmq
+    restart: always
+
+  system-events:
+    build:
+      context: .
+      dockerfile: Dockerfile-events
+    container_name: system-events
+    working_dir: /app
+    ports:
+      - "9060:9060"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/nwt_events
+      EUREKA_CLIENT_SERVICEURL_DEFAULTZONE: http://eureka-server:8761/eureka/
+    depends_on:
+      - config-server
+      - eureka-server
+      - postgres
+    restart: always
+
+  config-server:
+    build:
+      context: .
+      dockerfile: Dockerfile-config
+    container_name: config-server
+    working_dir: /app
+    ports:
+      - "8888:8888"
+
+  eureka-server:
+    build:
+      context: .
+      dockerfile: Dockerfile-eureka
+    container_name: eureka-server
+    working_dir: /app
+    ports:
+      - "8761:8761"
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile-frontend
+    container_name: frontend
+    working_dir: /app
+    ports:
+      - "3000:3000"
+
+  rabbitmq:
+    image: rabbitmq:3.12-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: user
+      RABBITMQ_DEFAULT_PASS: pass
+    restart: always
+
+  postgres:
+    image: postgres:15
+    container_name: postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_HOST_AUTH_METHOD: trust
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db.sh:/docker-entrypoint-initdb.d/init-db.sh
+
+volumes:
+  postgres_data:

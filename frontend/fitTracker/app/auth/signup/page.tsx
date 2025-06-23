@@ -40,7 +40,7 @@ export default function SignupPage() {
 
     try {
       const response = await fetch(
-        "http://localhost:8000/auth/api/v1/auth/register",
+        "http://localhost:8000/api/v1/auth/register",
         {
           method: "POST",
           headers: {

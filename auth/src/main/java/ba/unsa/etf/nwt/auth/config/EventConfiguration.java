@@ -1,6 +1,7 @@
 package ba.unsa.etf.nwt.auth.config;
 
 import ba.unsa.etf.nwt.auth.ws.interceptor.EventInterceptor;
+import com.netflix.discovery.EurekaClient;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.lang.NonNull;
@@ -11,11 +12,11 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 public class EventConfiguration {
 
 	@Bean
-	WebMvcConfigurer eventsConfigurer() {
+	WebMvcConfigurer eventsConfigurer(final EurekaClient eurekaClient) {
 		return new WebMvcConfigurer() {
 			@Override
 			public void addInterceptors(@NonNull final InterceptorRegistry registry) {
-				registry.addInterceptor(new EventInterceptor());
+				registry.addInterceptor(new EventInterceptor(eurekaClient));
 			}
 		};
 	}

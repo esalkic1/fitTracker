@@ -12,6 +12,11 @@ spring:
     password:
     driver-class-name: org.postgresql.Driver
 
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_CLIENT_SERVICEURL_DEFAULTZONE}
+
 grpc:
   server:
     port: 9060

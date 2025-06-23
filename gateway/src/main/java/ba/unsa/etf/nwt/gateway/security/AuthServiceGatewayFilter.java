@@ -1,6 +1,5 @@
 package ba.unsa.etf.nwt.gateway.security;
 
-import ba.unsa.etf.nwt.error_logging.model.ErrorType;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.cloud.gateway.filter.GatewayFilter;
@@ -74,7 +73,7 @@ public class AuthServiceGatewayFilter implements GatewayFilter {
 	private static String produceErrorResult() {
 		try {
 			return new ObjectMapper().writer().withDefaultPrettyPrinter().writeValueAsString(Map.of(
-					"type", ErrorType.UNAUTHORIZED,
+					"type", "UNAUTHORIZED",
 					"message", "Unauthorized",
 					"statusCode", HttpStatus.UNAUTHORIZED.value()
 			));

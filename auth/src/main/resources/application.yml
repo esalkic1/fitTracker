@@ -2,9 +2,16 @@ spring:
   application:
     name: auth
   profiles:
-    active: dev
+    active: compose
   config:
-    import: configserver:http://localhost:8888
+    import: configserver:http://config-server:8888
+    # configserver:http://localhost:8888 <- in case of running manually
+  rabbitmq:
+    host: rabbitmq
+    port: 5672
+    username: user
+    password: pass
+
 grpc:
   server:
     port: 7001 # unused, so might as well define it here

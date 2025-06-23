@@ -1,0 +1,18 @@
+FROM maven:3.9-eclipse-temurin-21 as builder
+WORKDIR /app/common
+COPY ./common .
+RUN mvn clean install -DskipTests
+
+WORKDIR /app/notifier
+COPY ./notifier .
+RUN mvn clean install -DskipTests
+
+WORKDIR /app/notifications
+COPY ./notification-service .
+RUN mvn clean install -DskipTests
+
+FROM eclipse-temurin:21-jre
+WORKDIR /app
+COPY --from=builder /app/notifications/target/*.jar app.jar
+EXPOSE 9040
+ENTRYPOINT ["java", "-jar", "app.jar"]

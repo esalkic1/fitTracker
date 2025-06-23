@@ -1,0 +1,15 @@
+FROM maven:3.9-eclipse-temurin-21 as builder
+
+WORKDIR /app/events
+COPY ./events .
+RUN mvn clean install -DskipTests
+
+WORKDIR /app/system_events
+COPY ./system_events .
+RUN mvn clean install -DskipTests
+
+FROM eclipse-temurin:21-jre
+WORKDIR /app
+COPY --from=builder /app/system_events/target/*.jar app.jar
+EXPOSE 9060
+ENTRYPOINT ["java", "-jar", "app.jar"]

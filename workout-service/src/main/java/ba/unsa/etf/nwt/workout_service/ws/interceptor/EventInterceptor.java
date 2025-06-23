@@ -2,6 +2,8 @@ package ba.unsa.etf.nwt.workout_service.ws.interceptor;
 
 import ba.unsa.etf.nwt.events.EventRequest;
 import ba.unsa.etf.nwt.events.EventServiceGrpc;
+import com.netflix.appinfo.InstanceInfo;
+import com.netflix.discovery.EurekaClient;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import jakarta.servlet.http.HttpServletRequest;
@@ -11,6 +13,11 @@ import org.springframework.web.servlet.HandlerInterceptor;
 import java.time.LocalDateTime;
 
 public class EventInterceptor implements HandlerInterceptor {
+    private final EurekaClient eurekaClient;
+
+    public EventInterceptor(final EurekaClient eurekaClient) {
+        this.eurekaClient = eurekaClient;
+    }
 
     @Override
     public void afterCompletion(
@@ -19,24 +26,36 @@ public class EventInterceptor implements HandlerInterceptor {
             final Object handler,
             final Exception ex
     ) {
-        // this should be discovered by eureka instead
-        final ManagedChannel channel= ManagedChannelBuilder
-                .forAddress("localhost",9060)
-                .usePlaintext()
-                .build();
+        final String host;
+        final int port;
+        try {
+            final InstanceInfo instanceInfo = eurekaClient.getApplication("SYSTEM_EVENTS").getInstances().getFirst();
+            host = instanceInfo.getIPAddr();
+            port = instanceInfo.getPort();
+            System.out.println(host + " " + port);
+        } catch (final Throwable e) {
+            return;
+        }
 
-        final EventServiceGrpc.EventServiceBlockingStub stub = EventServiceGrpc.newBlockingStub(channel);
-        stub.logEvent(
-                EventRequest.newBuilder()
-                        .setTimestamp(LocalDateTime.now().toString())
-                        .setMicroserviceName("workout-service")
-                        .setUser("temp")
-                        .setAction(request.getMethod())
-                        .setResource(request.getRequestURI())
-                        .setResponseType(Integer.toString(response.getStatus()))
-                        .build()
-        );
-        channel.shutdown();
+        try {
+            final ManagedChannel channel= ManagedChannelBuilder
+                    .forAddress(host, port)
+                    .usePlaintext()
+                    .build();
+
+            final EventServiceGrpc.EventServiceBlockingStub stub = EventServiceGrpc.newBlockingStub(channel);
+            stub.logEvent(
+                    EventRequest.newBuilder()
+                            .setTimestamp(LocalDateTime.now().toString())
+                            .setMicroserviceName("workout-service")
+                            .setUser("temp")
+                            .setAction(request.getMethod())
+                            .setResource(request.getRequestURI())
+                            .setResponseType(Integer.toString(response.getStatus()))
+                            .build()
+            );
+            channel.shutdown();
+        } catch (final Throwable ignored) {}
     }
 }
 
