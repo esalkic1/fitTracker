@@ -9,7 +9,7 @@ services:
     ports:
       - "9000:9000"
     environment:
-      JWT_SECRET_KEY: f1a9233adf8281a952cd569dee364c52e49e0e9b900c9ed014d6b872414fe72fdcc9ee6a70ffd6cbd2255aa8fdf80263e04d3d3437839dbe04cddb2b24a0cdd6dbc8741911fdbe665b40243b3855f310adb69eff9a9f7b608680c70c6ff97f1c8f324bf95e8cabe993e69ad672c50b4e498168582e7829a11c14cd27b3c3c745
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
       CONFIG_SERVER_URL: http://config-server:8888
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/nwt_auth
       SPRING_DATASOURCE_USERNAME: postgres
